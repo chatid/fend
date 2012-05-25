@@ -11,6 +11,9 @@ local fcntl = require "include.fcntl"
 local sock_methods = { }
 local sock_mt = {
 	__index = sock_methods ;
+	__gc = function ( sock )
+		ffi.C.close ( sock.fd )
+	end ;
 }
 
 local function new_sock ( fd , type )

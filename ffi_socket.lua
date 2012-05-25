@@ -29,9 +29,8 @@ local function getsockerr ( fd  )
 	return err[0]
 end
 
-function sock_methods:connect ( sockaddr_p , epoll_ob , cb )
-	local size = ffi.sizeof ( sockaddr_p[0] )
-	sockaddr_p = ffi.cast ( "struct sockaddr*" , sockaddr_p )
+function sock_methods:connect ( sockaddr , size , epoll_ob , cb )
+	local sockaddr_p = ffi.new ( "struct sockaddr*" , sockaddr )
 	if ffi.C.connect ( self.fd , sockaddr_p , size ) == -1 then
 		local err = ffi.errno ( )
 		if err ~= errors.EINPROGRESS then
@@ -107,13 +106,13 @@ local function new_tcp ( domain )
 end
 
 function sock_methods:ipv4_connect ( ip , port , ... )
-	local r = ffi.new ( "struct sockaddr_in[1]" )
-	r[0].sin_family = netinet_in.AF_INET
-	r[0].sin_port = ffi.C.htons ( port )
-	if ffi.C.inet_aton ( ip , r[0].sin_addr ) ~= 1 then
+	local r = ffi.new ( "struct sockaddr_in" )
+	r.sin_family = netinet_in.AF_INET
+	r.sin_port = ffi.C.htons ( port )
+	if ffi.C.inet_aton ( ip , r.sin_addr ) ~= 1 then
 		error ( "Unable to parse ip" )
 	end
-	return sock_methods.connect ( self , r , ... )
+	return sock_methods.connect ( self , r , ffi.sizeof ( "struct sockaddr_in" ) , ... )
 end
 
 

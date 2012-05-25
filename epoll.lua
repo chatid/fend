@@ -4,6 +4,8 @@ local bit = require"bit"
 require "include.stdio"
 require "include.strings"
 require "include.sys.signalfd"
+require "include.sys.timerfd"
+local time = require "include.time"
 
 ffi.cdef [[
 typedef struct
@@ -217,6 +219,62 @@ function epoll_methods:add_signal ( signum , id , cb )
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
 	end
+end
+
+local timerspec = ffi.new ( "struct itimerspec[1]" )
+local timer_mt = {
+	__index = {
+		set = function ( timer , value , interval , flags )
+			flags = flags or 0
+			interval = interval or 0
+			timerspec[0].it_interval.tv_sec = math.floor ( interval )
+			timerspec[0].it_interval.tv_nsec = ( interval % 1 )*1e9
+			timerspec[0].it_value.tv_sec = math.floor ( value )
+			timerspec[0].it_value.tv_nsec = ( value % 1 )*1e9
+			if ffi.C.timerfd_settime ( timer.fd , flags , timerspec , nil ) == -1 then
+				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+			end
+		end ;
+		disarm = function ( timer )
+			timer:set ( 0 , 0 )
+		end ;
+		status = function ( timer )
+			if ffi.C.timerfd_gettime ( timer.fd , timerspec ) == -1 then
+				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+			end
+			return tonumber ( timerspec[0].it_value.tv_sec ) + tonumber ( timerspec[0].it_value.tv_nsec ) / 1e9 ,
+				tonumber ( timerspec[0].it_interval.tv_sec ) + tonumber ( timerspec[0].it_interval.tv_nsec ) / 1e9
+		end ;
+	} ;
+	__gc = function ( self )
+		ffi.C.close ( self.fd )
+	end ;
+}
+-- Return values from callback change the period
+function epoll_methods:add_timer ( start , interval , cb )
+	local fd = ffi.C.timerfd_create ( time.CLOCK_MONOTONIC , bit.bor ( ffi.C.TFD_NONBLOCK ) )
+	if fd == -1 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
+	local timer = setmetatable ( { fd = fd } , timer_mt )
+
+	self:add_fd ( fd , {
+		read = function ( fd )
+			local expired = ffi.new ( "uint64_t[1]" )
+			local c = ffi.C.read ( fd , expired , ffi.sizeof ( expired ) )
+			if c == -1 then
+				cb ( nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+			end
+			--assert ( c == ffi.sizeof ( expired ) )
+			start , interval = cb ( timer , expired[0] )
+			if start then
+				timer:set ( start , interval )
+			end
+		end ;
+	} )
+	timer:set ( start , interval )
+
+	return timer
 end
 
 function epoll_methods:del_signal ( signum )

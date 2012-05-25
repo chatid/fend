@@ -10,13 +10,11 @@ local signal = require "include.signal"
 require "include.arpa.inet"
 
 
-local function addrinfo_to_string ( addr )
-	if addr.ai_family == 2 then -- IPv4
-		local sock_addr = ffi.cast ( "struct sockaddr_in*" , addr.ai_addr )
-		return ffi.string(ffi.C.inet_ntoa(sock_addr.sin_addr))..":"..ffi.C.ntohs(sock_addr.sin_port)
-	else
-		error ( "NYI" )
-	end
+local function addrinfo_to_string ( addrinfo )
+	local sock_addr = addrinfo.ai_addr
+	local len = netinet_in.INET6_ADDRSTRLEN
+	local buff = ffi.new ( "char[?]" , len )
+	return ffi.string ( ffi.C.inet_ntop ( addrinfo.ai_family , addrinfo.ai_addr , buff , len ) ) --..":"..ffi.C.ntohs(addr.sin_port)
 end
 
 local function lookup ( hostname , port )

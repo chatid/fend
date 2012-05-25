@@ -62,9 +62,6 @@ local EPOLL_CTL = {
 	MOD = 3	; -- Change file decriptor epoll_event structure.
 }
 
-local epoll_methods = { }
-local epoll_mt = { __index = epoll_methods }
-
 local sigfds_to_epoll_obs = { }
 local signal_cb_table = {
 	read = function ( fd )
@@ -82,6 +79,15 @@ local signal_cb_table = {
 		local cb = self.sigcbs [ signum ] [ id ]
 		cb ( info )
 	end
+}
+local epoll_methods = { }
+local epoll_mt = {
+	__index = epoll_methods ;
+	__gc = function ( self )
+		sigfds_to_epoll_obs [ self.sigfd ] = nil
+		ffi.C.close ( self.sigfd )
+		ffi.C.close ( self.epfd )
+	end ;
 }
 
 local function new_epoll ( guesstimate )

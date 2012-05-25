@@ -98,22 +98,12 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 end
 
 -- Create tcp/ipv? streaming socket
-local function new_IP ( ip_version )
-	local domain
-	if ip_version == 4 then
-		domain = netinet_in.PF_INET
-	elseif ip_version == 6 then
-		domain = netinet_in.PF_INET6
-	else
-		error ( "Unknown IP version: " .. ip_version )
-	end
+local function new_tcp ( domain )
 	local fd = ffi.C.socket ( domain , ffi.C.SOCK_STREAM , ffi.C.IPPROTO_TCP )
 	if fd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-
-	local sock = new_sock ( fd , "TCP/IPv" .. ip_version )
-	return setmetatable ( sock , sock_mt )
+	return new_sock ( fd , "TCP" )
 end
 
 function sock_methods:ipv4_connect ( ip , port , ... )
@@ -128,5 +118,5 @@ end
 
 
 return {
-	new_IP = new_IP ;
+	new_tcp = new_tcp ;
 }

@@ -32,9 +32,9 @@ e:add_fd ( stdin , {
 dns.lookup_async ( "duckduckgo.com" , 80 , e , function ( addrinfo )
 		print ( "Connecting to " .. dns.addrinfo_to_string ( addrinfo ) )
 
-		local sock = socket.new_IP ( 4 )
+		local sock = socket.new_tcp ( addrinfo.ai_family )
 		sock:set_blocking ( false )
-		sock:connect ( addrinfo.ai_addr , e , function ( sock , err )
+		sock:connect ( addrinfo.ai_addr[0] , addrinfo.ai_addrlen , e , function ( sock , err )
 				assert ( sock , err )
 				sock:write ( "GET / HTTP/1.0\r\n\r\n" , nil , e , function ( sock , err )
 						assert ( sock , err )
@@ -54,6 +54,13 @@ dns.lookup_async ( "duckduckgo.com" , 80 , e , function ( addrinfo )
 							} )
 					end )
 			end )
+	end )
+
+local t1 = e:add_timer ( 1 , 1 , function ( timer , n )
+		print("timer1")
+	end )
+local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
+		print("timer2",t1:status())
 	end )
 
 while dontquit do

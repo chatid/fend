@@ -23,7 +23,10 @@ local function lookup ( hostname , port )
 		service = tostring ( port )
 	end
 	local res = ffi.new ( "struct addrinfo*[1]" )
-	ffi.C.getaddrinfo ( hostname , service , nil , res )
+	local err = ffi.C.getaddrinfo ( hostname , service , nil , res )
+	if err ~= 0 then
+		error ( ffi.string ( ffi.C.gai_strerror ( err ) ) )
+	end
 	return ffi.gc ( res[0] , ffi.C.freeaddrinfo )
 end
 

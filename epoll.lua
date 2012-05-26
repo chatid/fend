@@ -6,63 +6,7 @@ require "include.strings"
 require "include.sys.signalfd"
 require "include.sys.timerfd"
 local time = require "include.time"
-
-ffi.cdef [[
-typedef struct
-  {
-    unsigned long int __val[(1024 / (8 * sizeof (unsigned long int)))];
-  } __sigset_t;
-typedef __sigset_t sigset_t;
-enum
-  {
-    EPOLL_CLOEXEC = 02000000,
-    EPOLL_NONBLOCK = 04000
-  };
-enum EPOLL_EVENTS
-  {
-    EPOLLIN = 0x001,
-    EPOLLPRI = 0x002,
-    EPOLLOUT = 0x004,
-    EPOLLRDNORM = 0x040,
-    EPOLLRDBAND = 0x080,
-    EPOLLWRNORM = 0x100,
-    EPOLLWRBAND = 0x200,
-    EPOLLMSG = 0x400,
-    EPOLLERR = 0x008,
-    EPOLLHUP = 0x010,
-    EPOLLRDHUP = 0x2000,
-    EPOLLONESHOT = 1u << 30,
-    EPOLLET = 1u << 31
-  };
-typedef union epoll_data
-{
-  void *ptr;
-  int fd;
-  uint32_t u32;
-  uint64_t u64;
-} epoll_data_t;
-struct epoll_event
-{
-  uint32_t events;
-  epoll_data_t data;
-} __attribute__ ((__packed__));
-
-extern int epoll_create (int __size) __attribute__ ((__nothrow__ , __leaf__));
-extern int epoll_create1 (int __flags) __attribute__ ((__nothrow__ , __leaf__));
-extern int epoll_ctl (int __epfd, int __op, int __fd,
-        struct epoll_event *__event) __attribute__ ((__nothrow__ , __leaf__));
-extern int epoll_wait (int __epfd, struct epoll_event *__events,
-         int __maxevents, int __timeout);
-extern int epoll_pwait (int __epfd, struct epoll_event *__events,
-   int __maxevents, int __timeout,
-   __const __sigset_t *__ss);
-]]
-
-local EPOLL_CTL = {
-	ADD = 1 ; -- Add a file decriptor to the interface.
-	DEL = 2	; -- Remove a file decriptor from the interface.
-	MOD = 3	; -- Change file decriptor epoll_event structure.
-}
+local epoll_lib = require "include.epoll"
 
 local sigfds_to_epoll_obs = { }
 local signal_cb_table = {
@@ -126,9 +70,9 @@ end
 function epoll_methods:add_fd ( fd , cbs )
 	local op
 	if self.registered [ fd ] then
-		op = EPOLL_CTL.MOD
+		op = epoll_lib.EPOLL_CTL_MOD
 	else
-		op = EPOLL_CTL.ADD
+		op = epoll_lib.EPOLL_CTL_ADD
 	end
 
 	local __events = ffi.new ( "struct epoll_event[1]" )
@@ -146,7 +90,7 @@ function epoll_methods:add_fd ( fd , cbs )
 end
 
 function epoll_methods:del_fd ( fd )
-	if ffi.C.epoll_ctl ( self.epfd , EPOLL_CTL.DEL , fd , nil ) ~= 0 then
+	if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	self.registered [ fd ] = nil
@@ -176,7 +120,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 		local fd = wait_events[i-1].data.fd
 		local cbs = self.registered [ fd ]
 		if cbs.oneshot then
-			if ffi.C.epoll_ctl ( self.epfd , EPOLL_CTL.DEL , fd , nil ) ~= 0 then
+			if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
 				cbs.error ( fd , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
 			self.registered [ fd ] = nil

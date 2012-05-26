@@ -44,8 +44,36 @@ function sock_methods:connect ( addrinfo , epoll_ob , cb )
 			if err ~= 0 then
 				cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
 			end
+			self.connected = true
 			cb ( self )
 		end , oneshot = true } )
+	self.connected = false
+end
+
+function sock_methods:bind ( addrinfo )
+	if ffi.C.bind ( self.fd.fd , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
+	self.bound = true
+end
+
+function sock_methods:listen ( backlog )
+	backlog = backlog or 128
+	if ffi.C.listen ( self.fd.fd , backlog ) == -1 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
+	self.listening = true
+end
+
+function sock_methods:accept ( )
+	local clientfd = ffi.C.accept ( self.fd.fd , nil , nil )
+	if clientfd == -1 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
+	local client = new_sock ( clientfd , self.type )
+	client.connected = true
+	client:set_blocking ( false )
+	return client
 end
 
 function sock_methods:set_blocking ( bool )

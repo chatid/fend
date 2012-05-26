@@ -1,5 +1,6 @@
 local ffi = require "ffi"
 local bit = require "bit"
+require "common"
 
 require "include.stdio"
 local errors = require "include.errno"
@@ -9,32 +10,30 @@ require "include.arpa.inet"
 local fcntl = require "include.fcntl"
 
 local sock_methods = { }
-local sock_mt = {
-	__index = sock_methods ;
-	__gc = function ( sock )
-		ffi.C.close ( sock.fd )
-	end ;
-}
+local sock_mt = { __index = sock_methods ; }
 
 local function new_sock ( fd , type )
 	return setmetatable ( {
-			fd = fd ;
+			fd = ffi.new ( "fd_t" , fd ) ;
 			type = type ;
 		} , sock_mt )
+end
+
+function sock_methods:getfd ( )
+	return self.fd.fd
 end
 
 local function getsockerr ( fd  )
 	local err = ffi.new ( "int[1]" )
 	local err_len = ffi.new ( "int[1]" , ffi.sizeof ( err ) )
-	if ffi.C.getsockopt ( fd , socket.SOL_SOCKET , socket.SO_ERROR , err , err_len ) ~= 0 then
+	if ffi.C.getsockopt ( fd.fd , socket.SOL_SOCKET , socket.SO_ERROR , err , err_len ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	return err[0]
 end
 
-function sock_methods:connect ( sockaddr , size , epoll_ob , cb )
-	local sockaddr_p = ffi.new ( "struct sockaddr*" , sockaddr )
-	if ffi.C.connect ( self.fd , sockaddr_p , size ) == -1 then
+function sock_methods:connect ( addrinfo , epoll_ob , cb )
+	if ffi.C.connect ( self.fd.fd , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
 		local err = ffi.errno ( )
 		if err ~= errors.EINPROGRESS then
 			cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
@@ -50,17 +49,13 @@ function sock_methods:connect ( sockaddr , size , epoll_ob , cb )
 end
 
 function sock_methods:set_blocking ( bool )
-	local flags = ffi.C.fcntl ( self.fd , fcntl.F_GETFL )
+	local flags = ffi.C.fcntl ( self.fd.fd , fcntl.F_GETFL )
 	if not bool then
 		flags = bit.bor ( flags , fcntl.O_NONBLOCK )
 	else
 		flags = bit.band ( flags , bit.bnot ( fcntl.O_NONBLOCK ) )
 	end
-	ffi.C.fcntl ( self.fd , fcntl.F_SETFL , ffi.cast ( "int" , flags ) )
-end
-
-function sock_methods:getfd ( )
-	return self.fd
+	ffi.C.fcntl ( self.fd.fd , fcntl.F_SETFL , ffi.cast ( "int" , flags ) )
 end
 
 function sock_methods:read ( buff , len , epoll_ob , cb )
@@ -84,7 +79,7 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 	end
 	local bytes_written = 0
 	epoll_ob:add_fd ( self.fd , { write = function ( fd )
-				local c = ffi.C.write ( fd , buff , len-bytes_written )
+				local c = ffi.C.write ( fd.fd , buff , len-bytes_written )
 				if c == -1 then
 					cb ( nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 				end
@@ -105,17 +100,9 @@ local function new_tcp ( domain )
 	if fd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	return new_sock ( fd , "TCP" )
-end
-
-function sock_methods:ipv4_connect ( ip , port , ... )
-	local r = ffi.new ( "struct sockaddr_in" )
-	r.sin_family = netinet_in.AF_INET
-	r.sin_port = ffi.C.htons ( port )
-	if ffi.C.inet_aton ( ip , r.sin_addr ) ~= 1 then
-		error ( "Unable to parse ip" )
-	end
-	return sock_methods.connect ( self , r , ffi.sizeof ( "struct sockaddr_in" ) , ... )
+	local sock = new_sock ( fd , "TCP" )
+	sock:set_blocking ( false )
+	return sock
 end
 
 

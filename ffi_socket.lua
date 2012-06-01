@@ -85,14 +85,28 @@ function sock_methods:read ( buff , len , epoll_ob , cb )
 	if not buff then
 		buff = ffi.new ( "char[?]" , len )
 	end
-	epoll_ob:add_fd ( self.fd , { read = function ( fd )
-				local c = ffi.C.read ( fd , buff , len )
+	local have = 0
+	epoll_ob:add_fd ( self.fd , {
+			read = function ( fd )
+				local c = ffi.C.read ( fd:getfd() , buff+have , len-have )
 				if c == -1 then
-					error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+					epoll_ob:del_fd ( fd )
+					cb ( self , nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) , buff , have ) -- Partial result
+					return
 				end
-				cb ( self , buff , c )
+				have = have + c
+				if have == len then
+					epoll_ob:del_fd ( fd )
+					cb ( self , buff , c )
+					return
+				end
 			end ;
-			oneshot = true ;
+			close = function ( fd )
+				cb ( self , nil , "closed" , buff , have ) -- Partial result
+			end ;
+			error = function ( fd , err )
+				cb ( self , nil , err , buff , have ) -- Partial result
+			end
 		} )
 end
 
@@ -101,19 +115,25 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 		len = #buff
 	end
 	local bytes_written = 0
-	epoll_ob:add_fd ( self.fd , { write = function ( fd )
-				local c = ffi.C.write ( fd.fd , buff , len-bytes_written )
+	epoll_ob:add_fd ( self.fd , {
+			write = function ( fd )
+				local c = ffi.C.write ( fd:getfd() , buff , len-bytes_written )
 				if c == -1 then
-					cb ( nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+					epoll_ob:del_fd ( fd )
+					cb ( self , nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) , bytes_written )
+					return
 				end
 				bytes_written = bytes_written + c
 				if bytes_written < len then
 					buff = buff + c
 				else
 					epoll_ob:del_fd ( fd )
-					cb ( self )
+					cb ( self , bytes_written )
 				end
 			end ;
+			error = function ( fd , err )
+				cb ( self , nil , err , bytes_written )
+			end
 		} )
 end
 

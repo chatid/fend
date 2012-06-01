@@ -39,8 +39,25 @@ local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
 		print("timer2",t1:status())
 	end )
 
+local port = math.random(49192,65535)
+local addrinfo = dns.lookup("*",port)
+local echo_serv = require"examples.echo"(e,addrinfo,16)
+print("Listening on " .. port )
+-- Connect to the echo server
+local str = "hi"
+local sock = socket.new_tcp ( addrinfo.ai_family )
+sock:connect ( addrinfo , e , function ( sock , err )
+		assert ( sock , err )
+		sock:write(str,#str,e,function(sock,err)
+				assert ( sock , err )
+				sock:read ( nil , #str , e , function ( sock , buff , len )
+						local str2 = ffi.string(buff,len)
+						assert ( str==str2)
+						print("CONFIRMED ECHO",str2)
+					end )
+			end )
+	end )
 
-local echo_serv = require"examples.echo"(e,dns.lookup("*",assert(arg[1],"No port given")),16)
 do -- Capture ^C
 	local signal = include "signal"
 	local mask = ffi.new ( "__sigset_t[1]" )

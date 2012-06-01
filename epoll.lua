@@ -78,7 +78,8 @@ function epoll_methods:add_fd ( fd , cbs )
 	__events[0].events = bit.bor (
 		cbs.read and ffi.C.EPOLLIN or 0 ,
 		cbs.write and ffi.C.EPOLLOUT or 0 ,
-		cbs.oneshot and ffi.C.EPOLLONESHOT or 0 )
+		cbs.oneshot and ffi.C.EPOLLONESHOT or 0 ,
+		ffi.C.EPOLLRDHUP )
 	__events[0].data.fd = fd.fd
 
 	if ffi.C.epoll_ctl ( self.epfd.fd , op , fd.fd , __events ) ~= 0 then
@@ -137,6 +138,13 @@ function epoll_methods:dispatch ( max_events , timeout )
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
 			if cbs.error then
 				cbs.error ( fd )
+			end
+		end
+		if bit.band ( events , ffi.C.EPOLLRDHUP ) ~= 0 then
+			if cbs.rdclose then
+				cbs.rdclose ( fd )
+			else
+				ffi.C.shutdown ( fd.fd , ffi.C.SHUT_RDWR )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then

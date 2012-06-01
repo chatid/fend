@@ -18,7 +18,7 @@ e:add_fd ( stdin , {
 	read = function ( fd )
 		local len = 80
 		local buff = ffi.new("char[?]",len)
-		local c = ffi.C.read ( fd , buff , len )
+		local c = ffi.C.read ( fd:getfd() , buff , len )
 		if c == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end

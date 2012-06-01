@@ -22,6 +22,9 @@ function sock_methods:getfd ( )
 end
 
 function sock_methods:close ( )
+	if ffi.C.shutdown ( self.fd:getfd() , ffi.C.SHUT_RDWR ) ~= 0 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
 	return self.fd:close ( )
 end
 

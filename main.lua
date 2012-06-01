@@ -61,60 +61,8 @@ local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
 		print("timer2",t1:status())
 	end )
 
--- An example server
-local addrinfo = dns.lookup ( "*" , arg[1] )
-local serv = socket.new_tcp ( addrinfo.ai_family )
-serv:bind ( addrinfo )
-serv:listen ( )
-e:add_fd ( serv.fd , {
-		read = function ( fd )
-		local client = serv:accept ( )
-			local len = 16
-			local buff = ffi.new("char[?]",len)
 
-			local append = 0
-			local sent = 0
-
-			local read , write
-			local cbs = { }
-			function read ( fd )
-				local max = len-(append-sent)
-				if max == 0 then return end -- Buffer full
-
-				local c = ffi.C.read ( fd.fd , buff+(append%len) , max )
-				if c == -1 then
-					error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-				end
-				append = append + c
-				cbs.write = write
-				if c == max then
-					cbs.read = nil
-				end
-				e:add_fd ( client.fd , cbs )
-			end
-			function write ( fd )
-				local max = append-sent
-				if max == 0 then return end -- Buffer empty
-
-				local c = ffi.C.write ( fd.fd , buff+(sent%len) , max )
-				if c == -1 then
-					error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-				end
-				sent = sent + c
-
-				cbs.read = read
-				if c == max then
-					cbs.write = nil
-				end
-				e:add_fd ( client.fd , cbs )
-			end
-			cbs.read = read
-			e:add_fd ( client.fd , cbs )
-		end ;
-		close = function ( fd )
-			e:del_fd ( fd )
-		end ;
-	} )
+local echo_serv = require"examples.echo"(e,dns.lookup("*",assert(arg[1],"No port given")),16)
 
 while dontquit do
 	e:dispatch ( 16 )

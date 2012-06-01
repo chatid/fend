@@ -33,7 +33,7 @@ local function getsockerr ( fd  )
 end
 
 function sock_methods:connect ( addrinfo , epoll_ob , cb )
-	if ffi.C.connect ( self.fd.fd , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
+	if ffi.C.connect ( self:getfd() , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
 		local err = ffi.errno ( )
 		if err ~= errors.EINPROGRESS then
 			cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
@@ -51,7 +51,7 @@ function sock_methods:connect ( addrinfo , epoll_ob , cb )
 end
 
 function sock_methods:bind ( addrinfo )
-	if ffi.C.bind ( self.fd.fd , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
+	if ffi.C.bind ( self:getfd() , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	self.bound = true
@@ -59,14 +59,14 @@ end
 
 function sock_methods:listen ( backlog )
 	backlog = backlog or 128
-	if ffi.C.listen ( self.fd.fd , backlog ) == -1 then
+	if ffi.C.listen ( self:getfd() , backlog ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	self.listening = true
 end
 
 function sock_methods:accept ( )
-	local clientfd = ffi.C.accept ( self.fd.fd , nil , nil )
+	local clientfd = ffi.C.accept ( self:getfd() , nil , nil )
 	if clientfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end

@@ -1,6 +1,4 @@
-require"ffi".cdef [[
-typedef long unsigned int size_t;
-
+require "ffi".cdef [[
 extern void *memcpy (void *__restrict __dest,
        __const void *__restrict __src, size_t __n)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));

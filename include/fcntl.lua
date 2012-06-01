@@ -1,4 +1,4 @@
-require"ffi".cdef [[
+require "ffi".cdef [[
 extern int fcntl (int __fd, int __cmd, ...);
 extern int open (__const char *__file, int __oflag, ...) __attribute__ ((__nonnull__ (1)));
 extern int openat (int __fd, __const char *__file, int __oflag, ...)

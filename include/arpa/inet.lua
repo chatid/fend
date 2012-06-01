@@ -1,6 +1,6 @@
-require "include.netinet.in"
+include "netinet/in"
 
-require"ffi".cdef [[
+require "ffi".cdef [[
 extern in_addr_t inet_addr (__const char *__cp) __attribute__ ((__nothrow__ , __leaf__));
 extern in_addr_t inet_lnaof (struct in_addr __in) __attribute__ ((__nothrow__ , __leaf__));
 extern struct in_addr inet_makeaddr (in_addr_t __net, in_addr_t __host)

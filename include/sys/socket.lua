@@ -1,6 +1,6 @@
-require "include.sys.types"
+include "sys/types"
 
-require"ffi".cdef [[
+require "ffi".cdef [[
 typedef __socklen_t socklen_t;
 enum __socket_type
 {

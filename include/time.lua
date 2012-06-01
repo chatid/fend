@@ -1,6 +1,6 @@
-require "include.sys.types"
+include "sys/types"
 
-require"ffi".cdef [[
+require "ffi".cdef [[
 typedef __clock_t clock_t;
 
 

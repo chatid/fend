@@ -1,4 +1,4 @@
-require "include.strings"
+include "strings"
 
 module ( ... )
 

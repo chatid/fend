@@ -1,13 +1,12 @@
 local ffi = require "ffi"
 local bit = require "bit"
 local new_fd = require "fd"
-
-require "include.stdio"
-require "include.strings"
-require "include.sys.signalfd"
-require "include.sys.timerfd"
-local time = require "include.time"
-local epoll_lib = require "include.epoll"
+include "stdio"
+include "strings"
+include "sys/signalfd"
+include "sys/timerfd"
+local time = include "time"
+local epoll_lib = include "epoll"
 
 local sigfds_to_epoll_obs = setmetatable ( { } , { __mode = "kv" } )
 local signal_cb_table = {

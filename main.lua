@@ -1,7 +1,9 @@
+require"common"
+
 local ffi = require "ffi"
-require "include.stdio"
-require "include.unistd"
-require "include.strings" -- For strerror
+include "stdio"
+include "unistd"
+include "strings" -- For strerror
 
 local epoll = require "epoll"
 local dns = require "ffi_dns"

@@ -1,6 +1,6 @@
-require "include.sys.types"
+include "sys/types"
 
-require"ffi".cdef [[
+require "ffi".cdef [[
 typedef int __sig_atomic_t;
 typedef struct
   {

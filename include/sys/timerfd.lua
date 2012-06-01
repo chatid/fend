@@ -1,6 +1,6 @@
-require "include.time"
+include "time"
 
-require"ffi".cdef [[
+require "ffi".cdef [[
 enum
   {
     TFD_CLOEXEC = 02000000,

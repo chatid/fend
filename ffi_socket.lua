@@ -1,11 +1,11 @@
 local ffi = require "ffi"
 local new_fd = require "fd"
 
-require "include.stdio"
-local errors = require "include.errno"
-local socket = require "include.sys.socket"
-local netinet_in = require "include.netinet.in"
-require "include.arpa.inet"
+include "stdio"
+local errors = include "errno"
+local socket = include "sys/socket"
+local netinet_in = include "netinet/in"
+include "arpa/inet"
 
 local sock_methods = { }
 local sock_mt = { __index = sock_methods ; }

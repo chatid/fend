@@ -1,4 +1,4 @@
-require "include.sys.socket"
+include "sys/socket"
 
 require"ffi".cdef [[
 enum

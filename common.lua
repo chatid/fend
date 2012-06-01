@@ -1,9 +1,6 @@
-local ffi = require"ffi"
-ffi.cdef [[
-	typedef struct { int fd; } fd_t;
-]]
-ffi.metatype ( "fd_t" , {
-		__gc = function ( self )
-			ffi.C.close ( self.fd )
-		end ;
-	} )
+include = setmetatable ( {} , {
+	__call = function  ( include , lib )
+		lib = "include." .. lib:gsub(".h$",""):gsub("/",".")
+		return require ( lib )
+	end
+}) -- Is the table modules go into, and the function that pulls them in

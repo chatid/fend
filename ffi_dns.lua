@@ -4,10 +4,10 @@ local epoll = require "ffi"
 
 local anl = ffi.load ( "anl" )
 
-local netdb = require "include.netdb"
-require "include.strings"
-local signal = require "include.signal"
-require "include.arpa.inet"
+local netdb = include "netdb"
+local signal = include "signal"
+include "strings"
+include "arpa.inet"
 
 
 local function addrinfo_to_string ( addrinfo )

@@ -1,4 +1,4 @@
-require"ffi".cdef [[
+require "ffi".cdef [[
 typedef struct
   {
     unsigned long int __val[(1024 / (8 * sizeof (unsigned long int)))];

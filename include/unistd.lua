@@ -1,63 +1,6 @@
-require"ffi".cdef [[
-typedef unsigned char __u_char;
-typedef unsigned short int __u_short;
-typedef unsigned int __u_int;
-typedef unsigned long int __u_long;
-typedef signed char __int8_t;
-typedef unsigned char __uint8_t;
-typedef signed short int __int16_t;
-typedef unsigned short int __uint16_t;
-typedef signed int __int32_t;
-typedef unsigned int __uint32_t;
-typedef signed long int __int64_t;
-typedef unsigned long int __uint64_t;
-typedef long int __quad_t;
-typedef unsigned long int __u_quad_t;
-typedef unsigned long int __dev_t;
-typedef unsigned int __uid_t;
-typedef unsigned int __gid_t;
-typedef unsigned long int __ino_t;
-typedef unsigned long int __ino64_t;
-typedef unsigned int __mode_t;
-typedef unsigned long int __nlink_t;
-typedef long int __off_t;
-typedef long int __off64_t;
-typedef int __pid_t;
-typedef struct { int __val[2]; } __fsid_t;
-typedef long int __clock_t;
-typedef unsigned long int __rlim_t;
-typedef unsigned long int __rlim64_t;
-typedef unsigned int __id_t;
-typedef long int __time_t;
-typedef unsigned int __useconds_t;
-typedef long int __suseconds_t;
-typedef int __daddr_t;
-typedef long int __swblk_t;
-typedef int __key_t;
-typedef int __clockid_t;
-typedef void * __timer_t;
-typedef long int __blksize_t;
-typedef long int __blkcnt_t;
-typedef long int __blkcnt64_t;
-typedef unsigned long int __fsblkcnt_t;
-typedef unsigned long int __fsblkcnt64_t;
-typedef unsigned long int __fsfilcnt_t;
-typedef unsigned long int __fsfilcnt64_t;
-typedef long int __ssize_t;
-typedef __off64_t __loff_t;
-typedef __quad_t *__qaddr_t;
-typedef char *__caddr_t;
-typedef long int __intptr_t;
-typedef unsigned int __socklen_t;
-typedef __ssize_t ssize_t;
-typedef long unsigned int size_t;
-typedef __gid_t gid_t;
-typedef __uid_t uid_t;
-typedef __off_t off_t;
-typedef __useconds_t useconds_t;
-typedef __pid_t pid_t;
-typedef __intptr_t intptr_t;
-typedef __socklen_t socklen_t;
+include "sys/types"
+
+require "ffi".cdef [[
 extern int access (__const char *__name, int __type) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
 extern int faccessat (int __fd, __const char *__file, int __type, int __flag)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2))) ;

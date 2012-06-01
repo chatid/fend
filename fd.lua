@@ -1,6 +1,7 @@
 local ffi = require"ffi"
 local bit = require "bit"
-local fcntl = require "include.fcntl"
+local fcntl = include "fcntl"
+
 ffi.cdef [[
 	typedef struct {
 		const int fd;

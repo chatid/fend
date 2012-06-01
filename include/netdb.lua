@@ -1,5 +1,6 @@
-require "include.netinet.in"
-require"ffi".cdef [[
+include "netinet/in"
+
+require "ffi".cdef [[
 extern int *__h_errno_location (void) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
 extern void herror (__const char *__str) __attribute__ ((__nothrow__ , __leaf__));
 extern __const char *hstrerror (int __err_num) __attribute__ ((__nothrow__ , __leaf__));

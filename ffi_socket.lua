@@ -117,7 +117,7 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 	local bytes_written = 0
 	epoll_ob:add_fd ( self.fd , {
 			write = function ( fd )
-				local c = ffi.C.write ( fd:getfd() , buff , len-bytes_written )
+				local c = ffi.C.write ( fd:getfd() , buff+bytes_written , len-bytes_written )
 				if c == -1 then
 					epoll_ob:del_fd ( fd )
 					cb ( self , nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) , bytes_written )

@@ -28,31 +28,7 @@ e:add_fd ( stdin , {
 	end ;
 } )
 
-dns.lookup_async ( "duckduckgo.com" , 80 , e , function ( addrinfo )
-		print ( "Connecting to " .. dns.addrinfo_to_string ( addrinfo ) )
-
-		local sock = socket.new_tcp ( addrinfo.ai_family )
-		sock:connect ( addrinfo , e , function ( sock , err )
-				assert ( sock , err )
-				sock:write ( "GET / HTTP/1.0\r\n\r\n" , nil , e , function ( sock , err )
-						assert ( sock , err )
-						local len = 2^20
-						local buff = ffi.new("char[?]",len)
-						e:add_fd ( sock.fd , {
-								read = function ( fd )
-								local c = ffi.C.read ( fd.fd , buff , len )
-									if c == -1 then
-										error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-									end
-									ffi.C.write ( 1 , buff , c )
-								end ;
-								close = function ( fd )
-									e:del_fd ( fd )
-								end ;
-							} )
-					end )
-			end )
-	end )
+require"examples.http_client".request ( "http://google.com" , e , function ( b ) print(b) end )
 
 local t1 = e:add_timer ( 1 , 1 , function ( timer , n )
 		print("timer1")

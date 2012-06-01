@@ -137,8 +137,11 @@ function epoll_methods:dispatch ( max_events , timeout )
 		if cbs.error and bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
 			cbs.error ( fd )
 		end
-		if cbs.close and bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then
-			cbs.close ( fd )
+		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then
+			if cbs.close then
+				cbs.close ( fd )
+			end
+			self:del_fd ( fd )
 		end
 	end
 end

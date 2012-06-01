@@ -6,7 +6,7 @@ local urlparse = require "socket.url".parse
 local function request ( url , e , cb )
 	url = urlparse ( url )
 	dns.lookup_async ( url.host , url.port or 80 , e , function ( addrinfo )
-			print ( "Connecting to " .. table.concat({dns.addrinfo_to_string ( addrinfo )}," ") )
+			print ( "Connecting to " ,dns.addrinfo_to_string ( addrinfo ) )
 
 			local sock = socket.new_tcp ( addrinfo.ai_family )
 			sock:connect ( addrinfo , e , function ( sock , err )

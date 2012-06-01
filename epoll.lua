@@ -1,6 +1,6 @@
 local ffi = require "ffi"
 local bit = require "bit"
-require "common"
+local new_fd = require "fd"
 
 require "include.stdio"
 require "include.strings"
@@ -38,7 +38,7 @@ local function new_epoll ( guesstimate )
 	if epfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	epfd = ffi.new ( "fd_t" , epfd )
+	epfd = new_fd ( epfd )
 
 	local mask = ffi.new ( "sigset_t[1]" )
 	ffi.C.sigemptyset ( mask )
@@ -46,7 +46,7 @@ local function new_epoll ( guesstimate )
 	if sigfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	sigfd = ffi.new ( "fd_t" , sigfd )
+	sigfd = new_fd ( sigfd )
 
 	local self = setmetatable ( {
 			epfd = epfd ;
@@ -200,7 +200,7 @@ function epoll_methods:add_timer ( start , interval , cb )
 	if timerfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	timerfd = ffi.new ( "fd_t" , timerfd )
+	timerfd = new_fd ( timerfd )
 	local timer = setmetatable ( { fd = timerfd } , timer_mt )
 
 	self:add_fd ( timerfd , {

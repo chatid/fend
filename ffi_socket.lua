@@ -1,6 +1,6 @@
 local ffi = require "ffi"
 local bit = require "bit"
-require "common"
+local new_fd = require "fd"
 
 require "include.stdio"
 local errors = require "include.errno"
@@ -20,7 +20,11 @@ local function new_sock ( fd , type )
 end
 
 function sock_methods:getfd ( )
-	return self.fd.fd
+	return self.fd:getfd ( )
+end
+
+function sock_methods:close ( )
+	return self.fd:close ( )
 end
 
 local function getsockerr ( fd  )
@@ -70,9 +74,9 @@ function sock_methods:accept ( )
 	if clientfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	local client = new_sock ( clientfd , self.type )
+	local client = new_sock ( new_fd ( clientfd ) , self.type )
 	client.connected = true
-	client:set_blocking ( false )
+	client.fd:set_blocking ( false )
 	return client
 end
 
@@ -128,8 +132,8 @@ local function new_tcp ( domain )
 	if fd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	local sock = new_sock ( fd , "TCP" )
-	sock:set_blocking ( false )
+	local sock = new_sock ( new_fd ( fd ) , "TCP" )
+	sock.fd:set_blocking ( false )
 	return sock
 end
 

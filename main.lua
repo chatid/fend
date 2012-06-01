@@ -41,6 +41,22 @@ local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
 
 
 local echo_serv = require"examples.echo"(e,dns.lookup("*",assert(arg[1],"No port given")),16)
+do -- Capture ^C
+	local signal = include "signal"
+	local mask = ffi.new ( "__sigset_t[1]" )
+	e:add_signal ( signal.SIGINT , 0 , function ( siginfo )
+			if dontquit then
+				dontquit = false
+			else
+				os.exit ( 1 )
+			end
+		end )
+	ffi.C.sigemptyset ( mask )
+	ffi.C.sigaddset ( mask , signal.SIGINT )
+	if ffi.C.sigprocmask ( signal.SIG_BLOCK , mask , nil ) ~= 0 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
+end
 
 while dontquit do
 	e:dispatch ( 16 )

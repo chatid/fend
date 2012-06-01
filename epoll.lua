@@ -123,7 +123,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 		local cbs = self.registered [ fd ]
 		if cbs.oneshot then
 			if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
-				cbs.error ( fd , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
 			self.registered [ fd ] = nil
 			self.registered [ fd.fd ] = nil
@@ -134,8 +134,10 @@ function epoll_methods:dispatch ( max_events , timeout )
 		if cbs.write and bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
 			cbs.write ( fd )
 		end
-		if cbs.error and bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
-			cbs.error ( fd )
+		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
+			if cbs.error then
+				cbs.error ( fd )
+			end
 		end
 		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then
 			if cbs.close then

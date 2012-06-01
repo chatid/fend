@@ -129,11 +129,15 @@ function epoll_methods:dispatch ( max_events , timeout )
 			self.registered [ fd ] = nil
 			self.registered [ fd.fd ] = nil
 		end
-		if cbs.read and bit.band ( events , ffi.C.EPOLLIN ) ~= 0 then
-			cbs.read ( fd )
+		if bit.band ( events , ffi.C.EPOLLIN ) ~= 0 then
+			if cbs.read then
+				cbs.read ( fd )
+			end
 		end
-		if cbs.write and bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
-			cbs.write ( fd )
+		if bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
+			if cbs.write then
+				cbs.write ( fd )
+			end
 		end
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
 			if cbs.error then

@@ -1,5 +1,4 @@
 local ffi = require "ffi"
-local bit = require "bit"
 local new_fd = require "fd"
 
 require "include.stdio"
@@ -7,14 +6,13 @@ local errors = require "include.errno"
 local socket = require "include.sys.socket"
 local netinet_in = require "include.netinet.in"
 require "include.arpa.inet"
-local fcntl = require "include.fcntl"
 
 local sock_methods = { }
 local sock_mt = { __index = sock_methods ; }
 
 local function new_sock ( fd , type )
 	return setmetatable ( {
-			fd = ffi.new ( "fd_t" , fd ) ;
+			fd = fd ;
 			type = type ;
 		} , sock_mt )
 end
@@ -78,16 +76,6 @@ function sock_methods:accept ( )
 	client.connected = true
 	client.fd:set_blocking ( false )
 	return client
-end
-
-function sock_methods:set_blocking ( bool )
-	local flags = ffi.C.fcntl ( self.fd.fd , fcntl.F_GETFL )
-	if not bool then
-		flags = bit.bor ( flags , fcntl.O_NONBLOCK )
-	else
-		flags = bit.band ( flags , bit.bnot ( fcntl.O_NONBLOCK ) )
-	end
-	ffi.C.fcntl ( self.fd.fd , fcntl.F_SETFL , ffi.cast ( "int" , flags ) )
 end
 
 function sock_methods:read ( buff , len , epoll_ob , cb )

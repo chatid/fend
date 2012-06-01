@@ -1,9 +1,9 @@
 local ffi = require "ffi"
+local bit = require "bit"
 local epoll = require "ffi"
 
 local anl = ffi.load ( "anl" )
 
-local netinet_in = require "include.netinet.in"
 local netdb = require "include.netdb"
 require "include.strings"
 local signal = require "include.signal"
@@ -11,10 +11,15 @@ require "include.arpa.inet"
 
 
 local function addrinfo_to_string ( addrinfo )
-	local sock_addr = addrinfo.ai_addr
-	local len = netinet_in.INET6_ADDRSTRLEN
-	local buff = ffi.new ( "char[?]" , len )
-	return ffi.string ( ffi.C.inet_ntop ( addrinfo.ai_family , addrinfo.ai_addr , buff , len ) ) --..":"..ffi.C.ntohs(addr.sin_port)
+	local host_len = netdb.NI_MAXHOST or 1025
+	local host = ffi.new ( "char[?]" , host_len )
+	local serv_len = netdb.NI_MAXSERV or 32
+	local serv = ffi.new ( "char[?]" , serv_len )
+	local flags = bit.bor ( netdb.NI_NUMERICHOST , netdb.NI_NUMERICSERV )
+	if ffi.C.getnameinfo ( addrinfo.ai_addr , addrinfo.ai_addrlen , host , host_len , serv , serv_len , flags ) ~= 0 then
+		error ( ffi.string ( ffi.C.gai_strerror ( err ) ) )
+	end
+	return ffi.string ( host ) , ffi.string ( serv )
 end
 
 local function lookup ( hostname , port )
@@ -52,8 +57,6 @@ local function lookup_async ( hostname , port , epoll_ob , cb )
 	if port then
 		list[0].ar_service = tostring ( port )
 	end
-	-- Hints
-	--list[0].ar_request.ai_family = netinet_in.AF_UNSPEC
 
 	local id = counter()
 	local sigevent = ffi.new ( "struct sigevent" )

@@ -6,7 +6,7 @@ include "strings"
 include "sys/signalfd"
 include "sys/timerfd"
 local time = include "time"
-local epoll_lib = include "epoll"
+local epoll_lib = include "sys/epoll"
 
 local sigfds_to_epoll_obs = setmetatable ( { } , { __mode = "kv" } )
 local signal_cb_table = {

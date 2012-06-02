@@ -1,9 +1,4 @@
 require "ffi".cdef [[
-typedef struct
-  {
-    unsigned long int __val[(1024 / (8 * sizeof (unsigned long int)))];
-  } __sigset_t;
-typedef __sigset_t sigset_t;
 enum
   {
     EPOLL_CLOEXEC = 02000000,

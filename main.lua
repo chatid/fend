@@ -39,6 +39,7 @@ local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
 		print("timer2",t1:status())
 	end )
 
+math.randomseed ( os.time() )
 local port = math.random(49192,65535)
 local addrinfo = dns.lookup("*",port)
 local echo_serv = require"examples.echo"(e,addrinfo,16)

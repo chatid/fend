@@ -9,6 +9,7 @@ ffi.cdef [[
 	} fd_t;
 ]]
 
+local new = ffi.typeof ( "fd_t" )
 local fd_methods = { }
 
 function fd_methods:close ( )
@@ -45,4 +46,8 @@ ffi.metatype ( "fd_t" , {
 		end ;
 	} )
 
-return ffi.typeof ( "fd_t" )
+return function ( fd )
+	if io.type ( fd ) then
+	end
+	return new ( { fd } ) -- COMPAT: Wrap in table for luaffi
+end

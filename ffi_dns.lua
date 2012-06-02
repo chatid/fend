@@ -75,7 +75,7 @@ local function lookup_async ( hostname , port , epoll_ob , cb )
 			cb ( list[0].ar_result )
 		end )
 
-	local err = anl.getaddrinfo_a ( netdb.GAI_NOWAIT , ffi.new ( "struct gaicb*[1]" , list ) , items , sigevent )
+	local err = anl.getaddrinfo_a ( netdb.GAI_NOWAIT , ffi.new ( "struct gaicb*[1]" , {list} ) , items , sigevent )
 	if err ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( err ) ) )
 	end

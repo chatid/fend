@@ -14,7 +14,7 @@ local signal_cb_table = {
 		local self = sigfds_to_epoll_obs [ fd ]
 
 		local info = ffi.new ( "struct signalfd_siginfo[1]" )
-		local r = ffi.C.read ( fd.fd , info , ffi.sizeof ( info ) )
+		local r = tonumber ( ffi.C.read ( fd.fd , info , ffi.sizeof ( info ) ) )
 		if r == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
@@ -223,7 +223,7 @@ function epoll_methods:add_timer ( start , interval , cb )
 	self:add_fd ( timerfd , {
 		read = function ( fd )
 			local expired = ffi.new ( "uint64_t[1]" )
-			local c = ffi.C.read ( fd.fd , expired , ffi.sizeof ( expired ) )
+			local c = tonumber ( ffi.C.read ( fd.fd , expired , ffi.sizeof ( expired ) ) )
 			if c == -1 then
 				cb ( nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end

@@ -4,7 +4,7 @@ local ffi = require "ffi"
 include "stdio"
 include "unistd"
 include "strings" -- For strerror
-
+local new_fd = require "fd"
 local epoll = require "epoll"
 local dns = require "ffi_dns"
 local socket = require "ffi_socket"
@@ -13,12 +13,12 @@ local dontquit = true
 
 local e = epoll()
 
-local stdin = ffi.new ( "fd_t" , ffi.C.stdin._fileno )
+local stdin = new_fd ( ffi.C.stdin._fileno )
 e:add_fd ( stdin , {
 	read = function ( fd )
 		local len = 80
 		local buff = ffi.new("char[?]",len)
-		local c = ffi.C.read ( fd:getfd() , buff , len )
+		local c = tonumber ( ffi.C.read ( fd:getfd() , buff , len ) )
 		if c == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end

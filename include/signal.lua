@@ -1,15 +1,6 @@
 include "sys/types"
 
 require "ffi".cdef [[
-typedef int __sig_atomic_t;
-typedef struct
-  {
-    unsigned long int __val[(1024 / (8 * sizeof (unsigned long int)))];
-  } __sigset_t;
-extern int __sigismember (__const __sigset_t *, int);
-extern int __sigaddset (__sigset_t *, int);
-extern int __sigdelset (__sigset_t *, int);
-
 typedef __sig_atomic_t sig_atomic_t;
 
 typedef __sigset_t sigset_t;

@@ -29,8 +29,8 @@ function sock_methods:close ( )
 end
 
 local function getsockerr ( fd  )
-	local err = ffi.new ( "int[1]" )
-	local err_len = ffi.new ( "int[1]" , ffi.sizeof ( err ) )
+	local err , err_len = ffi.new ( "int[1]" ) , ffi.new ( "socklen_t[1]" )
+	err_len[0] = ffi.sizeof ( err )
 	if ffi.C.getsockopt ( fd.fd , socket.SOL_SOCKET , socket.SO_ERROR , err , err_len ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
@@ -88,7 +88,7 @@ function sock_methods:read ( buff , len , epoll_ob , cb )
 	local have = 0
 	epoll_ob:add_fd ( self.fd , {
 			read = function ( fd )
-				local c = ffi.C.read ( fd:getfd() , buff+have , len-have )
+				local c = tonumber ( ffi.C.read ( fd:getfd() , buff+have , len-have ) )
 				if c == -1 then
 					epoll_ob:del_fd ( fd )
 					cb ( self , nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) , buff , have ) -- Partial result
@@ -113,11 +113,12 @@ end
 function sock_methods:write ( buff , len , epoll_ob , cb )
 	if type ( buff ) == "string" then
 		len = #buff
+		buff = ffi.cast ( "const char *" , buff )
 	end
 	local bytes_written = 0
 	epoll_ob:add_fd ( self.fd , {
 			write = function ( fd )
-				local c = ffi.C.write ( fd:getfd() , buff+bytes_written , len-bytes_written )
+				local c = tonumber ( ffi.C.write ( fd:getfd() , buff+bytes_written , len-bytes_written ) )
 				if c == -1 then
 					epoll_ob:del_fd ( fd )
 					cb ( self , nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) , bytes_written )

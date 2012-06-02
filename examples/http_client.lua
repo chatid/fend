@@ -23,7 +23,7 @@ local function request ( url , e , cb )
 							local have = 0
 							e:add_fd ( sock.fd , {
 									read = function ( fd )
-										local c = ffi.C.read ( fd.fd , buff+have , len-have )
+										local c = tonumber ( ffi.C.read ( fd.fd , buff+have , len-have ) )
 										if c == -1 then
 											error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 										end

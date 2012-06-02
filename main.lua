@@ -13,7 +13,7 @@ local dontquit = true
 
 local e = epoll()
 
-local stdin = new_fd ( ffi.C.stdin._fileno )
+local stdin = new_fd ( io.stdin )
 e:add_fd ( stdin , {
 	read = function ( fd )
 		local len = 80

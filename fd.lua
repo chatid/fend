@@ -47,7 +47,12 @@ ffi.metatype ( "fd_t" , {
 	} )
 
 return function ( fd )
-	if io.type ( fd ) then
+	local is_luafile = io.type ( fd )
+	if is_luafile then
+		fd = ffi.C.fileno ( fd )
+		if fd == -1 then
+			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		end
 	end
-	return new ( { fd } ) -- COMPAT: Wrap in table for luaffi
+	return new ( { fd , is_luafile == "closed file" } ) -- COMPAT: Wrap in table for luaffi
 end

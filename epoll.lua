@@ -173,16 +173,6 @@ function epoll_methods:dispatch ( max_events , timeout )
 	end
 end
 
---[[function watch_signal ( signum , cb )
-	local action = ffi.new ( "struct sigaction" )
-	action.__sigaction_handler.sa_sigaction = function ( signum , info , content )
-		print("SIGNAL",signum,info,content)
-	end
-	--action.sa_mask
-	action.sa_flags = signal.SA_SIGINFO
-	ffi.C.sigaction ( signum , action , nil )
-end--]]
-
 --- Watch for a signal.
 -- This function will not block the signal for you; you must do that yourself
 -- signum is the signal to watch for

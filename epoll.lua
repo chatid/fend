@@ -88,7 +88,6 @@ function epoll_methods:add_fd ( fd , cbs )
 	end
 	self.registered [ fd ] = cbs
 	self.registered [ fd.fd ] = fd
-	return true
 end
 
 function epoll_methods:del_fd ( fd )
@@ -97,7 +96,6 @@ function epoll_methods:del_fd ( fd )
 	end
 	self.registered [ fd ] = nil
 	self.registered [ fd.fd ] = nil
-	return true
 end
 
 local wait_size = 0

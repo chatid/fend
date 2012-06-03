@@ -14,7 +14,8 @@ return function ( e , addrinfo , len )
 
 	e:add_fd ( serv.fd , {
 			read = function ( fd )
-				local client = serv:accept ( )
+				local client , sockaddr , sockaddr_len = serv:accept ( true )
+				print("CLIENT CONNECTED",dns.addrinfo_to_string ( sockaddr , sockaddr_len ))
 				local buff = ffi.new("char[?]",len)
 
 				local append = 0

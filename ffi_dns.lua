@@ -64,15 +64,16 @@ local function lookup_async ( hostname , port , epoll_ob , cb )
 	sigevent.sigev_signo = signum
 	sigevent.sigev_value.sival_int = id
 
-	epoll_ob:add_signal ( signum , id , function ( sig_info )
-			--[[if ffi.C.sigprocmask ( signal.SIG_UNBLOCK , mask , nil ) ~= 0 then
-				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-			end--]]
-			local err = anl.gai_error ( list[0] )
-			if err ~= 0 then
-				error ( ffi.string ( anl.gai_strerror ( err ) ) )
+	epoll_ob:add_signal ( signum , function ( sig_info , cb_id )
+			local sigid = sig_info[0].ssi_int
+			if sigid == id then
+				local err = anl.gai_error ( list[0] )
+				if err ~= 0 then
+					error ( ffi.string ( anl.gai_strerror ( err ) ) )
+				end
+				cb ( list[0].ar_result )
+				epoll_ob:del_signal ( signum , cb_id )
 			end
-			cb ( list[0].ar_result )
 		end )
 
 	local err = anl.getaddrinfo_a ( netdb.GAI_NOWAIT , ffi.new ( "struct gaicb*[1]" , {list} ) , items , sigevent )

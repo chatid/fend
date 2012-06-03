@@ -21,9 +21,9 @@ local signal_cb_table = {
 		assert ( r == ffi.sizeof ( info ) )
 
 		local signum = info[0].ssi_signo
-		local id = info[0].ssi_int
-		local cb = self.sigcbs [ signum ] [ id ]
-		cb ( info )
+		for id , cb in pairs ( self.sigcbs [ signum ] ) do
+			cb ( info , id )
+		end
 	end
 }
 local epoll_methods = { }
@@ -170,15 +170,28 @@ end
 	ffi.C.sigaction ( signum , action , nil )
 end--]]
 
-function epoll_methods:add_signal ( signum , id , cb )
+function epoll_methods:add_signal ( signum , cb )
 	local cbs = self.sigcbs [ signum ]
 	if cbs then
-		cbs [ id ] = cb
+		local n = #cbs + 1
+		cbs [ n ] = cb
+		return n
 	else
-		cbs = { [ id ] = cb }
+		cbs = { cb }
 		self.sigcbs [ signum ] = cbs
 
 		ffi.C.sigaddset ( self.sigmask , signum )
+		return 1
+	end
+end
+
+function epoll_methods:del_signal ( signum , id )
+	local cbs = self.sigcbs [ signum ]
+	cbs [ id ] = nil
+	if next ( cbs ) == nil then -- No callbacks left for this signal; remove it from the watched set
+		if ffi.C.sigdelset ( self.sigmask , signum ) == -1 then
+			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		end
 		if ffi.C.signalfd ( self.sigfd.fd , self.sigmask , 0 ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
@@ -237,13 +250,6 @@ function epoll_methods:add_timer ( start , interval , cb )
 	timer:set ( start , interval )
 
 	return timer
-end
-
-function epoll_methods:del_signal ( signum )
-	local fd = sigfds [ signum ]
-	epoll_methods:del_fd ( fd )
-	ffi.C.sigdelset ( self.sigmask , signum )
-	sigfds [ signum ] = nil
 end
 
 return new_epoll

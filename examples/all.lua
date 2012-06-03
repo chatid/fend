@@ -63,7 +63,7 @@ sock:connect ( addrinfo , e , function ( sock , err )
 do -- Capture ^C
 	local signal = include "signal"
 	local mask = ffi.new ( "__sigset_t[1]" )
-	e:add_signal ( signal.SIGINT , 0 , function ( siginfo )
+	e:add_signal ( signal.SIGINT , function ( siginfo )
 			if dontquit then
 				dontquit = false
 			else

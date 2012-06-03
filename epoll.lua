@@ -101,9 +101,8 @@ end
 local wait_size = 0
 local wait_events -- One big shared array...
 function epoll_methods:dispatch ( max_events , timeout )
-	if max_events == nil then
-		max_events = wait_size
-	elseif max_events > wait_size then -- Expand the array
+	max_events = max_events or 1
+	if max_events > wait_size then -- Expand the array
 		wait_events = ffi.new ( "struct epoll_event[?]" , max_events )
 		wait_size = max_events
 	end

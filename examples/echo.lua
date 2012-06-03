@@ -25,10 +25,7 @@ return function ( e , addrinfo , len )
 					local max = len-(append-sent)
 					if max == 0 then return end -- Buffer full
 
-					local c = tonumber ( ffi.C.read ( fd.fd , buff+(append%len) , max ) )
-					if c == -1 then
-						error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-					end
+					local c = assert ( self:recv ( buff+(append%len) , max ) )
 					append = append + c
 					cbs.write = write
 					if c == max then
@@ -40,10 +37,7 @@ return function ( e , addrinfo , len )
 					local max = append-sent
 					if max == 0 then return end -- Buffer empty
 
-					local c = tonumber ( ffi.C.write ( fd.fd , buff+(sent%len) , max ) )
-					if c == -1 then
-						error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-					end
+					local c = assert ( self:send ( buff+(sent%len) , max ) )
 					sent = sent + c
 
 					cbs.read = read

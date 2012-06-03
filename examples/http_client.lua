@@ -23,10 +23,7 @@ local function request ( url , e , cb )
 							local have = 0
 							e:add_fd ( sock.fd , {
 									read = function ( fd )
-										local c = tonumber ( ffi.C.read ( fd.fd , buff+have , len-have ) )
-										if c == -1 then
-											error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-										end
+										local c = assert ( sock:recv ( buff+have , len-have ) )
 										have = have + c
 									end ;
 									close = function ( fd )

@@ -1,6 +1,6 @@
 local ffi = require "ffi"
-local new_fd = require "fd"
-
+local new_fd = require "ffi_ev.fd"
+require "ffi_ev.common"
 include "stdio"
 local errors = include "errno"
 local socket = include "sys/socket"
@@ -13,7 +13,7 @@ local sock_mt = { __index = sock_methods ; }
 local function new_sock ( fd , type )
 	return setmetatable ( {
 			fd = fd ;
-			type = type ;
+			type = type ; -- A string describing the socket
 		} , sock_mt )
 end
 
@@ -22,10 +22,7 @@ function sock_methods:getfd ( )
 end
 
 function sock_methods:close ( )
-	if ffi.C.shutdown ( self.fd:getfd() , ffi.C.SHUT_RDWR ) ~= 0 then
-		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-	end
-	return self.fd:close ( )
+	self.fd:close ( )
 end
 
 local function getsockerr ( fd  )
@@ -70,16 +67,51 @@ function sock_methods:listen ( backlog )
 	self.listening = true
 end
 
-function sock_methods:accept ( )
-	local clientfd = ffi.C.accept ( self:getfd() , nil , nil )
+function sock_methods:accept ( with_sockaddr )
+	local sockaddr , sockaddr_len
+	if with_sockaddr then
+	 	sockaddr , sockaddr_len = ffi.new ( "struct sockaddr[1]" ) , ffi.new ( "socklen_t[1]" )
+		sockaddr_len[0] = ffi.sizeof ( sockaddr )
+	end
+	local clientfd = ffi.C.accept ( self:getfd() , sockaddr , sockaddr_len )
 	if clientfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	local client = new_sock ( new_fd ( clientfd ) , self.type )
 	client.connected = true
 	client.fd:set_blocking ( false )
-	return client
+	if with_sockaddr then
+		return client , sockaddr , sockaddr_len[0]
+	else
+		return client
+	end
 end
+
+function sock_methods:shutdown ( )
+	if ffi.C.shutdown ( self.fd:getfd() , ffi.C.SHUT_RDWR ) ~= 0 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
+end
+
+function sock_methods:recv ( buff , len , flags )
+	flags = flags or 0
+	local c = tonumber ( ffi.C.recv ( self:getfd() , buff , len , flags ) )
+	if c == -1 then
+		return nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) )
+	end
+	return c
+end
+sock_methods.receive = sock_methods.recv
+
+function sock_methods:send ( buff , len , flags )
+	flags = flags or ffi.C.MSG_NOSIGNAL
+	local c = tonumber ( ffi.C.send ( self:getfd() , buff , len , flags ) )
+	if c == -1 then
+		return nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) )
+	end
+	return c
+end
+
 
 function sock_methods:read ( buff , len , epoll_ob , cb )
 	if not buff then
@@ -88,10 +120,10 @@ function sock_methods:read ( buff , len , epoll_ob , cb )
 	local have = 0
 	epoll_ob:add_fd ( self.fd , {
 			read = function ( fd )
-				local c = tonumber ( ffi.C.read ( fd:getfd() , buff+have , len-have ) )
-				if c == -1 then
+				local c , err = self:recv ( buff+have , len-have )
+				if not c then
 					epoll_ob:del_fd ( fd )
-					cb ( self , nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) , buff , have ) -- Partial result
+					cb ( self , nil , err , buff , have ) -- Partial result
 					return
 				end
 				have = have + c
@@ -118,10 +150,10 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 	local bytes_written = 0
 	epoll_ob:add_fd ( self.fd , {
 			write = function ( fd )
-				local c = tonumber ( ffi.C.write ( fd:getfd() , buff+bytes_written , len-bytes_written ) )
-				if c == -1 then
+				local c , err = self:send ( buff+bytes_written , len-bytes_written )
+				if not c then
 					epoll_ob:del_fd ( fd )
-					cb ( self , nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) , bytes_written )
+					cb ( self , nil , err , bytes_written )
 					return
 				end
 				bytes_written = bytes_written + c
@@ -136,6 +168,14 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 				cb ( self , nil , err , bytes_written )
 			end
 		} )
+end
+
+function sock_methods:getpeername ( )
+	local sockaddr , sockaddr_len = ffi.new ( "struct sockaddr[1]" ) , ffi.new ( "socklen_t[1]" )
+	sockaddr_len[0] = ffi.sizeof ( sockaddr )
+	if ffi.C.getpeername ( sock:getfd() , sockaddr , sockaddr_len ) == -1 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
 end
 
 -- Create tcp/ipv? streaming socket

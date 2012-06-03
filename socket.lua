@@ -49,14 +49,12 @@ function sock_methods:connect ( addrinfo , epoll_ob , cb )
 			self.connected = true
 			cb ( self )
 		end , oneshot = true } )
-	self.connected = false
 end
 
 function sock_methods:bind ( addrinfo )
 	if ffi.C.bind ( self:getfd() , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	self.bound = true
 end
 
 function sock_methods:listen ( backlog )
@@ -64,7 +62,6 @@ function sock_methods:listen ( backlog )
 	if ffi.C.listen ( self:getfd() , backlog ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	self.listening = true
 end
 
 function sock_methods:accept ( with_sockaddr )

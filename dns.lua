@@ -1,22 +1,20 @@
 local ffi = require "ffi"
 local bit = require "bit"
-local epoll = require "ffi"
 
 local anl = ffi.load ( "anl" )
-
+require "ffi_ev.common"
 local netdb = include "netdb"
 local signal = include "signal"
 include "strings"
 include "arpa.inet"
 
-
-local function addrinfo_to_string ( addrinfo )
+local function addrinfo_to_string ( sockaddr , addr_len )
 	local host_len = netdb.NI_MAXHOST or 1025
 	local host = ffi.new ( "char[?]" , host_len )
 	local serv_len = netdb.NI_MAXSERV or 32
 	local serv = ffi.new ( "char[?]" , serv_len )
 	local flags = bit.bor ( netdb.NI_NUMERICHOST , netdb.NI_NUMERICSERV )
-	if ffi.C.getnameinfo ( addrinfo.ai_addr , addrinfo.ai_addrlen , host , host_len , serv , serv_len , flags ) ~= 0 then
+	if ffi.C.getnameinfo ( sockaddr , addr_len , host , host_len , serv , serv_len , flags ) ~= 0 then
 		error ( ffi.string ( ffi.C.gai_strerror ( err ) ) )
 	end
 	return ffi.string ( host ) , ffi.string ( serv )

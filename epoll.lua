@@ -116,10 +116,10 @@ function epoll_methods:dispatch ( max_events , timeout )
 	if n == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	for i=1,n do
-		local events = wait_events[i-1].events
-		local fd = wait_events[i-1].data.fd
-		fd = self.registered [ fd ]
+	for i=0,n-1 do
+		local events = wait_events[i].events
+		local fd = wait_events[i].data.fd
+		fd = assert ( self.registered [ fd ] )
 		local cbs = self.registered [ fd ]
 		if cbs.oneshot then
 			if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then

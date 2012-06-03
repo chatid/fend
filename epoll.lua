@@ -1,3 +1,7 @@
+--- Epoll based event framework
+-- Events can originate from file descriptors, signals or timers.
+-- The module returns an epoll object constructor
+
 local ffi = require "ffi"
 local bit = require "bit"
 local new_fd = require "fd"
@@ -31,6 +35,9 @@ local epoll_mt = {
 	__index = epoll_methods ;
 }
 
+--- Creates a new epoll object.
+-- guesstimate is a guess for how many file handles will be watched (to help memory allocation)
+-- returns the new object
 local function new_epoll ( guesstimate )
 	guesstimate = guesstimate or 10
 	local epfd = ffi.C.epoll_create ( guesstimate )
@@ -66,7 +73,9 @@ local function new_epoll ( guesstimate )
 	return self
 end
 
--- cbs is a table of callbacks: read,write
+--- Add a file descriptor to be watched.
+-- fd is the file descriptor to watch
+-- cbs is a table of callbacks, the events to watch for are selected based on the callbacks given
 function epoll_methods:add_fd ( fd , cbs )
 	local op
 	if self.registered [ fd ] then
@@ -90,6 +99,8 @@ function epoll_methods:add_fd ( fd , cbs )
 	self.registered [ fd.fd ] = fd
 end
 
+--- Stop watching a file descriptor
+-- fd is the file descriptor to stop watching
 function epoll_methods:del_fd ( fd )
 	if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
@@ -100,6 +111,9 @@ end
 
 local wait_size = 0
 local wait_events -- One big shared array...
+--- Wait for a number of events and call their callbacks.
+-- max_events (optional) is the number of events to wait for. Defaults to 1.
+-- timeout (optional) is the maximum time to wait for an event before returning. Default is to wait forever
 function epoll_methods:dispatch ( max_events , timeout )
 	max_events = max_events or 1
 	if max_events > wait_size then -- Expand the array
@@ -169,6 +183,11 @@ end
 	ffi.C.sigaction ( signum , action , nil )
 end--]]
 
+--- Watch for a signal.
+-- This function will not block the signal for you; you must do that yourself
+-- signum is the signal to watch for
+-- cb is the callback to call when a signal arrives; it will receive a `struct signalfd_siginfo[1]` and the watcher's identifier
+-- returns an identifier that should be used to delete the signal later
 function epoll_methods:add_signal ( signum , cb )
 	local cbs = self.sigcbs [ signum ]
 	if cbs then
@@ -189,6 +208,9 @@ function epoll_methods:add_signal ( signum , cb )
 	end
 end
 
+--- Stop watching for a signal.
+-- signum is the signal to stop watching
+-- id is the signal id to stop watching (obtained from add_signal)
 function epoll_methods:del_signal ( signum , id )
 	local cbs = self.sigcbs [ signum ]
 	cbs [ id ] = nil
@@ -228,7 +250,12 @@ local timer_mt = {
 		end ;
 	} ;
 }
--- Return values from callback change the period
+
+--- Create a timer that creates events.
+-- start is how long from now to fire the timer
+-- interval (optional) is the period of the timer. Defaults to never (0)
+-- cb is the callback to call when the timer fires; it will receive the timer object and the interval; return values from callback change the timer's start and interval
+-- returns a timer object that has methods `set`, `disarm` and `status`
 function epoll_methods:add_timer ( start , interval , cb )
 	local timerfd = ffi.C.timerfd_create ( time.CLOCK_MONOTONIC , bit.bor ( ffi.C.TFD_NONBLOCK ) )
 	if timerfd == -1 then

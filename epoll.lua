@@ -65,6 +65,7 @@ local function new_epoll ( guesstimate )
 
 			-- Holds registered file descriptors, has maps to each one's callbacks
 			registered = { } ;
+			raw_fd_map = { } ;
 		} , epoll_mt )
 	sigfds_to_epoll_obs [ sigfd ] = self
 
@@ -96,7 +97,7 @@ function epoll_methods:add_fd ( fd , cbs )
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	self.registered [ fd ] = cbs
-	self.registered [ fd.fd ] = fd
+	self.raw_fd_map [ fd:getfd() ] = fd
 end
 
 --- Stop watching a file descriptor
@@ -106,7 +107,7 @@ function epoll_methods:del_fd ( fd )
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	self.registered [ fd ] = nil
-	self.registered [ fd.fd ] = nil
+	self.raw_fd_map [ fd:getfd() ] = nil
 end
 
 local wait_size = 0
@@ -132,14 +133,14 @@ function epoll_methods:dispatch ( max_events , timeout )
 	for i=0,n-1 do
 		local events = wait_events[i].events
 		local fd = wait_events[i].data.fd
-		fd = assert ( self.registered [ fd ] )
+		fd = assert ( self.raw_fd_map [ fd ] )
 		local cbs = self.registered [ fd ]
 		if cbs.oneshot then
 			if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
 			self.registered [ fd ] = nil
-			self.registered [ fd.fd ] = nil
+			self.raw_fd_map [ fd:getfd() ] = nil
 		end
 		if bit.band ( events , ffi.C.EPOLLIN ) ~= 0 then
 			if cbs.read then

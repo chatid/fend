@@ -40,7 +40,9 @@ local function new_epoll ( guesstimate )
 	epfd = new_fd ( epfd )
 
 	local mask = ffi.new ( "sigset_t[1]" )
-	ffi.C.sigemptyset ( mask )
+	if ffi.C.sigemptyset ( mask ) == -1 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
 	local sigfd = ffi.C.signalfd ( -1 , mask , 0 )
 	if sigfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
@@ -180,7 +182,12 @@ function epoll_methods:add_signal ( signum , cb )
 		cbs = { cb }
 		self.sigcbs [ signum ] = cbs
 
-		ffi.C.sigaddset ( self.sigmask , signum )
+		if ffi.C.sigaddset ( self.sigmask , signum ) == -1 then
+			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		end
+		if ffi.C.signalfd ( self.sigfd.fd , self.sigmask , 0 ) == -1 then
+			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		end
 		return 1
 	end
 end

@@ -1,13 +1,12 @@
-require"common"
-
 local ffi = require "ffi"
+require "ffi_ev.common"
 include "stdio"
 include "unistd"
 include "strings" -- For strerror
-local new_fd = require "fd"
-local epoll = require "epoll"
-local dns = require "ffi_dns"
-local socket = require "ffi_socket"
+local new_fd = require "ffi_ev.fd"
+local epoll = require "ffi_ev.epoll"
+local dns = require "ffi_ev.dns"
+local socket = require "ffi_ev.socket"
 
 local dontquit = true
 
@@ -30,7 +29,7 @@ e:add_fd ( stdin , {
 	end ;
 } )
 
-require"examples.http_client".request ( "http://google.com" , e , function ( b ) print(b) end )
+require "ffi_ev.examples.http_client".request ( "http://google.com" , e , function ( b ) print(b) end )
 
 local t1 = e:add_timer ( 1 , 1 , function ( timer , n )
 		print("timer1")
@@ -42,7 +41,7 @@ local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
 math.randomseed ( os.time() )
 local port = math.random(49192,65535)
 local addrinfo = dns.lookup("*",port)
-local echo_serv = require"examples.echo"(e,addrinfo,16)
+local echo_serv = require"ffi_ev.examples.echo"(e,addrinfo,16)
 print("Listening on " .. port )
 -- Connect to the echo server
 local str = "hi"

@@ -1,6 +1,6 @@
 local ffi = require "ffi"
-local dns = require "ffi_dns"
-local socket = require "ffi_socket"
+local dns = require "ffi_ev.dns"
+local socket = require "ffi_ev.socket"
 local urlparse = require "socket.url".parse
 
 local function request ( url , e , cb )

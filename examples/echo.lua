@@ -2,7 +2,8 @@
 -- Uses a circular buffer of the given length
 
 local ffi = require "ffi"
-local socket = require "ffi_socket"
+local socket = require "ffi_ev.socket"
+local dns = require "ffi_ev.dns"
 
 return function ( e , addrinfo , len )
 	len = len or 2048

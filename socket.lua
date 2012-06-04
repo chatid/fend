@@ -93,7 +93,7 @@ function sock_methods:accept ( with_sockaddr )
 end
 
 function sock_methods:shutdown ( )
-	if ffi.C.shutdown ( self.fd:getfd() , ffi.C.SHUT_RDWR ) ~= 0 then
+	if ffi.C.shutdown ( self:getfd() , ffi.C.SHUT_RDWR ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 end

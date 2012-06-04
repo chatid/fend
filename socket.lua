@@ -51,6 +51,14 @@ function sock_methods:connect ( addrinfo , epoll_ob , cb )
 		end , oneshot = true } )
 end
 
+function sock_methods:set_option ( option , val )
+	option = assert ( socket["SO_"..option:upper()] , "Unknown option" )
+	val = ffi.new("int[1]",val)
+	if ffi.C.setsockopt ( self:getfd() , socket.SOL_SOCKET , option , val , ffi.sizeof(val) ) == -1 then
+		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+	end
+end
+
 function sock_methods:bind ( addrinfo )
 	if ffi.C.bind ( self:getfd() , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )

@@ -21,9 +21,8 @@ return function ( e , addrinfo , len )
 				local append = 0
 				local sent = 0
 
-				local cbs = { }
 				local read , write
-				function read ( fd )
+				function read ( fd , cbs )
 					local max = len-(append-sent)
 					if max == 0 then return end -- Buffer full
 
@@ -35,7 +34,7 @@ return function ( e , addrinfo , len )
 					end
 					e:add_fd ( fd , cbs )
 				end
-				function write ( fd )
+				function write ( fd , cbs )
 					local max = append-sent
 					if max == 0 then return end -- Buffer empty
 
@@ -48,8 +47,7 @@ return function ( e , addrinfo , len )
 					end
 					e:add_fd ( fd , cbs )
 				end
-				cbs.read = read
-				e:add_fd ( client.fd , cbs )
+				e:add_fd ( client.fd , { read = read } )
 			end ;
 		} )
 

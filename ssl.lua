@@ -162,7 +162,7 @@ local function new_context ( params )
 			context = context ;
 			mode = assert ( modes [ params.mode ] , "Invalid mode" ) ;
 		} )
-    ssl.SSL_CTX_set_session_cache_mode ( context , ssl_defs.SSL_SESS_CACHE_OFF )
+	ssl.SSL_CTX_ctrl ( context , ssl_defs.SSL_CTRL_SET_SESS_CACHE_MODE , ssl_defs.SSL_SESS_CACHE_OFF , ffi.NULL )
 	ssl.SSL_CTX_ctrl ( context , ssl_defs.SSL_CTRL_MODE , bit.bor ( ssl_defs.SSL_MODE_ENABLE_PARTIAL_WRITE , ssl_defs.SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER ) , ffi.NULL )
 	if params.key then
 		self:loadkey ( params.key , params.password )

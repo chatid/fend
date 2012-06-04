@@ -1,0 +1,48 @@
+fend (Fast EveNt Dispatch)
+==========================
+
+fend is an event framework utilising LuaJIT's ffi.
+
+It currently only has an epoll based dispatcher; so use is limited to linux based devices.
+
+Installation
+------------
+
+Just place the `fend` directory in your lua module search path
+
+
+Modules
+-------
+
+### FD
+This module wraps raw file descriptors (ints) in a structure to attach methods.
+
+The module returns a constructor that takes the raw file descriptor.
+
+ - `fd:getfd ( )` returns the raw file descriptor
+ - `fd:set_blocking ( bool )` sets the `O_NONBLOCK` flag
+
+
+### Socket
+A non-blocking luasocket-like interface
+
+### SSL
+Provides a luasec-like interface (even supporting the same context types)
+
+### DNS
+Provides dns and host based utilities.
+
+ - `dns.lookup ( hostname , port )` does a blocking lookup, returning an `addrinfo` structure
+ - `dns.lookup_async ( hostname , port , epoll_ob , cb )` does a non-blocking dns lookup, and when ready (dispatched via the `epoll_ob`), will call callback `cb` with an `addrinfo` structure.
+
+
+Examples
+--------
+
+ - `examples/all.lua` is a demonstration of every module working together
+
+
+Extra Information
+-----------------
+
+The `include` directory contains a partial replication of processed files from the `/usr/include` directory.

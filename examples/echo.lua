@@ -26,7 +26,7 @@ return function ( e , addrinfo , len )
 					local max = len-(append-sent)
 					if max == 0 then return end -- Buffer full
 
-					local c = assert ( self:recv ( buff+(append%len) , max ) )
+					local c = assert ( client:recv ( buff+(append%len) , max ) )
 					append = append + c
 					cbs.write = write
 					if c == max then
@@ -38,7 +38,7 @@ return function ( e , addrinfo , len )
 					local max = append-sent
 					if max == 0 then return end -- Buffer empty
 
-					local c = assert ( self:send ( buff+(sent%len) , max ) )
+					local c = assert ( client:send ( buff+(sent%len) , max ) )
 					sent = sent + c
 
 					cbs.read = read

@@ -44,7 +44,7 @@ end
 ffi.metatype ( "fd_t" , {
 		__index = fd_methods ;
 		__tostring = function ( self )
-			return "file: " .. self:getfd()
+			return "fd(" .. tostring(self:getfd()) .. ")"
 		end ;
 		__gc = function ( self )
 			self:close ( )

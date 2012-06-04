@@ -114,6 +114,9 @@ end
 sock_methods.receive = sock_methods.recv
 
 function sock_methods:send ( buff , len , flags )
+	if not ffi.istype("char*",buff) then
+		buff = tostring ( buff )
+	end
 	len = len or #buff
 	flags = flags or ffi.C.MSG_NOSIGNAL
 	local c = tonumber ( ffi.C.send ( self:getfd() , buff , len , flags ) )

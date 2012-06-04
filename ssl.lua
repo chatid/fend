@@ -188,6 +188,7 @@ local function new_context ( params )
 	return self
 end
 
+local original_socks = { } -- We have to keep the originals around to stop them getting closed on collection
 local ssl_methods = { }
 
 function ssl_methods:recv ( buff , len )
@@ -235,8 +236,11 @@ function ssl_methods:dohandshake ( )
 	return true
 end
 
-
-local original_socks = { } -- We have to keep the originals around to stop them getting closed on collection
+-- SSL_shutdown may need extra data... we don't care.. I hope
+function ssl_methods:close ( )
+	ssl.SSL_shutdown ( self )
+	original_socks [ self ]:close ( )
+end
 
 ffi.metatype ( "SSL" , {
 	__index =  ssl_methods ;

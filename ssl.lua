@@ -208,6 +208,7 @@ end
 ssl_methods.receive = ssl_methods.recv
 
 function ssl_methods:send ( buff , len )
+	len = len or #buff
 	local c = ssl.SSL_write ( self , buff , len )
 	if c <= 0 then
 		if err == ssl_defs.SSL_ERROR_WANT_READ then

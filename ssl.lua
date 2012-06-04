@@ -248,6 +248,9 @@ ffi.metatype ( "SSL" , {
 		ssl.SSL_free ( self )
 		original_socks [ self ] = nil
 	end ;
+	__tostring = function ( self )
+		return "SSL_wrapped:" .. tostring ( original_socks [ self ] )
+	end ;
 } )
 
 local function wrap ( sock , ctx )

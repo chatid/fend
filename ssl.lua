@@ -4,6 +4,24 @@ local ssl = ffi.load ( "ssl" )
 local ssl_defs = include "openssl/ssl"
 local err = include "openssl/err"
 
+-- From LuaSec
+ffi.cdef [[
+typedef struct t_context_ {
+  SSL_CTX *context;
+  char mode;
+} t_context;
+typedef t_context* p_context;
+]]
+
+local MD_CTX_INVALID = 0 ;
+local MD_CTX_SERVER = 1 ;
+local MD_CTX_CLIENT = 2 ;
+local modes = {
+	client = MD_CTX_CLIENT ;
+	server = MD_CTX_SERVER ;
+}
+
+
 ssl.SSL_load_error_strings()
 ssl.SSL_library_init()
 
@@ -12,7 +30,12 @@ local function geterr()
 end
 
 local context_methods = { }
-local context_mt = { __index = context_methods ; }
+local context_mt = {
+	__index = context_methods ;
+	__gc = function ( self )
+		ssl.SSL_CTX_free ( self.context )
+	end ;
+}
 
 function context_methods:loadkey ( filename , password )
 	local passwd_callback = ffi.cast ( "pem_password_cb*" , function ( out_buff , max_size , rw , userdata )
@@ -26,22 +49,22 @@ function context_methods:loadkey ( filename , password )
 			return #password
 		end )
 
-	ssl.SSL_CTX_set_default_passwd_cb ( self , passwd_callback )
-	if ssl.SSL_CTX_use_PrivateKey_file ( self , filename , ssl_defs.SSL_FILETYPE_PEM ) ~= 1 then
+	ssl.SSL_CTX_set_default_passwd_cb ( self.context , passwd_callback )
+	if ssl.SSL_CTX_use_PrivateKey_file ( self.context , filename , ssl_defs.SSL_FILETYPE_PEM ) ~= 1 then
 		error ( geterr() )
 	end
-	ssl.SSL_CTX_set_default_passwd_cb ( self , nil )
+	ssl.SSL_CTX_set_default_passwd_cb ( self.context , nil )
 	passwd_callback:free()
 end
 
 function context_methods:loadcert ( filename )
-	if ssl.SSL_CTX_use_certificate_chain_file ( self , filename ) ~= 1 then
+	if ssl.SSL_CTX_use_certificate_chain_file ( self.context , filename ) ~= 1 then
 		error ( geterr() )
 	end
 end
 
 function context_methods:locations ( file , dir )
-	if ssl.SSL_CTX_load_verify_locations ( self , file , dir ) ~= 1 then
+	if ssl.SSL_CTX_load_verify_locations ( self.context , file , dir ) ~= 1 then
 		error ( geterr() )
 	end
 end
@@ -62,7 +85,7 @@ function context_methods:set_verify ( flag )
 			flag = bit.bor ( flag , verifys [ v ] )
 		end
 	end
-	ssl.SSL_CTX_set_verify ( self , flag , ffi.NULL )
+	ssl.SSL_CTX_set_verify ( self.context , flag , ffi.NULL )
 end
 
 local options = {
@@ -108,20 +131,20 @@ function context_methods:set_options ( flag )
 			flag = bit.bor ( flag , options [ v ] )
 		end
 	end
-	ssl.SSL_CTX_set_options ( self , flag , ffi.NULL )
+	ssl.SSL_CTX_set_options ( self.context , flag , ffi.NULL )
 end
 
 function context_methods:set_cipher ( list )
-	if ssl.SSL_CTX_set_cipher_list ( self , list ) ~= 1 then
+	if ssl.SSL_CTX_set_cipher_list ( self.context , list ) ~= 1 then
 		error ( geterr() )
 	end
 end
 
 function context_methods:set_depth ( depth )
-	ssl.SSL_CTX_set_verify_depth ( self , depth )
+	ssl.SSL_CTX_set_verify_depth ( self.context , depth )
 end
 
-ffi.metatype ( "SSL_CTX" , context_mt )
+ffi.metatype ( "t_context" , context_mt )
 
 local protocol_to_method = {
 	tlsv1 = ssl.TLSv1_method() ;
@@ -135,42 +158,49 @@ local function new_context ( params )
 	if context == ffi.NULL then
 		error ( geterr() )
 	end
-	ffi.gc ( context , ssl.SSL_CTX_free )
-
+	local self = ffi.new ( "t_context" , {
+			context = context ;
+			mode = assert ( modes [ params.mode ] , "Invalid mode" ) ;
+		} )
+    ssl.SSL_CTX_set_session_cache_mode ( context , ssl_defs.SSL_SESS_CACHE_OFF )
+	ssl.SSL_CTX_ctrl ( context , ssl_defs.SSL_CTRL_MODE , bit.bor ( ssl_defs.SSL_MODE_ENABLE_PARTIAL_WRITE , ssl_defs.SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER ) , ffi.NULL )
 	if params.key then
-		context:loadkey ( params.key , params.password )
+		self:loadkey ( params.key , params.password )
 	end
 	if params.certificate then
-    	context:loadcert ( params.certificate )
+    	self:loadcert ( params.certificate )
    	end
 	if params.cafile or params.capath then
-    	context:locations ( params.cafile , params.capath )
+    	self:locations ( params.cafile , params.capath )
     end
     if params.verify then
-    	context:set_verify ( params.verify )
+    	self:set_verify ( params.verify )
     end
     if params.options then
-    	context:set_options ( params.options )
+    	self:set_options ( params.options )
     end
     if params.ciphers then
-    	context:set_cipher ( params.ciphers )
+    	self:set_cipher ( params.ciphers )
     end
     if params.depth then
-    	context:set_depth ( params.depth )
+    	self:set_depth ( params.depth )
     end
-    ssl.SSL_CTX_ctrl ( context , ssl_defs.SSL_CTRL_MODE , bit.bor ( ssl_defs.SSL_MODE_ENABLE_PARTIAL_WRITE , ssl_defs.SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER ) , ffi.NULL )
-
-	return context
+	return self
 end
 
 local ssl_methods = { }
-local ssl_mt = { __index =  ssl_methods ; }
 
 function ssl_methods:recv ( buff , len )
 	local c = ssl.SSL_read ( self , buff , len )
 	if c <= 0 then
 		local err = ssl.SSL_get_error ( self , c )
-		return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
+		if err == ssl_defs.SSL_ERROR_WANT_READ then
+			return nil , "wantread"
+		elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
+			return nil , "wantwrite"
+		else
+			return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
+		end
 	end
 	return c
 end
@@ -179,29 +209,59 @@ ssl_methods.receive = ssl_methods.recv
 function ssl_methods:send ( buff , len )
 	local c = ssl.SSL_write ( self , buff , len )
 	if c <= 0 then
-		local err = ssl.SSL_get_error ( self , c )
-		return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
+		if err == ssl_defs.SSL_ERROR_WANT_READ then
+			return nil , "wantread"
+		elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
+			return nil , "wantwrite"
+		else
+			return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
+		end
 	end
 	return c
 end
 
-ffi.metatype ( "SSL" , ssl_mt )
+function ssl_methods:dohandshake ( )
+	local c = ssl.SSL_do_handshake ( self )
+	if c ~= 1 then
+		local err = ssl.SSL_get_error ( self , c )
+		if err == ssl_defs.SSL_ERROR_WANT_READ then
+			return nil , "wantread"
+		elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
+			return nil , "wantwrite"
+		else
+			return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
+		end
+	end
+	return true
+end
 
-local function wrap ( sock , context , mode )
-	if type ( context ) == "table" then
-		context = new_context ( context )
+
+local original_socks = { } -- We have to keep the originals around to stop them getting closed on collection
+
+ffi.metatype ( "SSL" , {
+	__index =  ssl_methods ;
+	__gc = function ( self )
+		ssl.SSL_free ( self )
+		original_socks [ self ] = nil
+	end ;
+} )
+
+local function wrap ( sock , ctx )
+	if type ( ctx ) == "table" then
+		ctx = new_context ( ctx )
+	elseif type ( ctx ) == "userdata" then -- Is probably from LuaSec.....
+		ctx = ffi.cast ( "p_context" , ctx )
 	end
 
-	local self = ssl.SSL_new ( context )
+	local self = ssl.SSL_new ( ctx.context )
 	if self == ffi.NULL then
 		error ( geterr() )
 	end
-	ffi.gc ( self , ssl.SSL_free )
-
+	original_socks [ self ] = sock
 	if ssl.SSL_set_fd ( self , sock:getfd() ) ~= 1 then
 		error ( geterr() )
 	end
-	if mode == "server" then
+	if ctx.mode == MD_CTX_SERVER then
 		ssl.SSL_set_accept_state ( self )
 	else
 		ssl.SSL_set_connect_state ( self )

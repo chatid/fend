@@ -25,23 +25,52 @@ The module returns a constructor that takes the raw file descriptor:
     stdin = new_fd ( 0 )`
 ```
 
- - `fd:getfd ( )` returns the raw file descriptor
- - `fd:set_blocking ( bool )` sets the `O_NONBLOCK` flag
+ - `fd:getfd ( )`  
+ 	returns the raw file descriptor
+
+ - `fd:set_blocking ( bool )`  
+ 	sets the `O_NONBLOCK` flag
 
 
 ### Socket
 A non-blocking luasocket-like interface
 
- - `sock = socket.new_tcp ( domain )` creates a new socket with the given domain (where `domain` is an `AF_*`; these can conviniently be found in an addrinfo structure: `addrinfo.ai_family` (see DNS section))
- - `sock:getfd ( )` returns the raw file descriptor for the socket
- - `sock:set_option ( option , val )` calls `setsockopt` with the given option (a string, eg `"REUSEADDR"`) and `int` val
- - `sock:bind ( addrinfo )` binds the socket to the interface given in `addrinfo`
- - `sock:listen ( backlog )` sets the socket to listen with the given backlog (defaults to 128)
- - `sock:accept ( with_sockaddr )` accepts a new client on `sock`. the returned socket will have `O_NONBLOCK` set. if `with_sockaddr` is true, the call will return a `sockaddr` and it's length as extra return values
+ - `sock = socket.new_tcp ( domain )`  
+ 	Creates a new socket with the given domain (where `domain` is an `AF_*`; these can conviniently be found in an addrinfo structure: `addrinfo.ai_family` (see DNS section))
+
+ - `sock:getfd ( )`  
+ 	Returns the raw file descriptor for the socket
+
+ - `sock:set_option ( option , val )`  
+ 	Calls `setsockopt` with the given option (a string, eg `"REUSEADDR"`) and `int` val
+
+ - `sock:bind ( addrinfo )`  
+	Binds the socket to the interface given in `addrinfo`
+
+ - `sock:listen ( backlog )`  
+ 	Sets the socket to listen with the given backlog (defaults to 128)
+
+ - `sock:accept ( with_sockaddr )`  
+ 	Accepts a new client on `sock`.  
+ 	The returned socket will have `O_NONBLOCK` set.  
+ 	If `with_sockaddr` is true, the call will return a `sockaddr` and length as extra return values
+
  - `sock:shutdown ( )`
- - `sock:recv ( buff , len , flags )` `buff` should be a user allocated buffer of length `len`. `flags` defaults to `0`
- - `sock:send ( buff , len , flags )` if `buff` is not a `const char*` then it will have `tostring` called on it. if `len` is not given, it is the length of the string. `flags` defaults to `0`
- - `sock:getpeername ( )` returns a `sockaddr` and it's length representing the connected peer
+
+ - `n_read = sock:recv ( buff , len , flags )`  
+	`buff` should be a user allocated buffer of length `len`.  
+	`flags` defaults to `0`.  
+	Returns the number of bytes read.
+
+ - `n_bytes = sock:send ( buff , len , flags )`  
+ 	Sends buff to the connected peer  
+	If `buff` is not a `const char*` then it will have `tostring` called on it.  
+	If `len` is not given, it is the length of the string.  
+	`flags` defaults to `0`.  
+	Returns the number of bytes written.
+
+ - `sock:getpeername ( )`  
+ 	Returns a `sockaddr` and it's length representing the connected peer
 
 ### SSL
 Provides a luasec-like interface (even supporting the same context types)
@@ -49,14 +78,19 @@ Provides a luasec-like interface (even supporting the same context types)
 ### DNS
 Provides dns and host based utilities.
 
- - `dns.lookup ( hostname , port )` does a blocking lookup, returning an `addrinfo` structure
- - `dns.lookup_async ( hostname , port , epoll_ob , cb )` does a non-blocking dns lookup, and when ready (dispatched via the `epoll_ob`), will call callback `cb` with an `addrinfo` structure.
+ - `dns.lookup ( hostname , port )`  
+ 	Completes a blocking lookup, returning an `addrinfo` structure
+
+ - `dns.lookup_async ( hostname , port , epoll_ob , cb )`  
+ 	Does a non-blocking dns lookup, and when ready (dispatched via the `epoll_ob`).  
+ 	Will call callback `cb` with an `addrinfo` structure.
 
 
 Examples
 --------
 
- - `examples/all.lua` is a demonstration of every module working together
+ - `examples/all.lua`  
+ 	is a demonstration of every module working together
 
 
 Extra Information

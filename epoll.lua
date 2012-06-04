@@ -67,6 +67,10 @@ local function new_epoll ( guesstimate )
 			-- Holds registered file descriptors, has maps to each one's callbacks
 			registered = { } ;
 			raw_fd_map = { } ;
+
+			-- Data structures for dispatch
+			wait_size = 0 ;
+			wait_events = nil ;
 		} , epoll_mt )
 	sigfds_to_epoll_obs [ sigfd ] = self
 
@@ -111,30 +115,28 @@ function epoll_methods:del_fd ( fd )
 	self.raw_fd_map [ fd:getfd() ] = nil
 end
 
-local wait_size = 0
-local wait_events -- One big shared array...
 --- Wait for a number of events and call their callbacks.
 -- max_events (optional) is the number of events to wait for. Defaults to 1.
 -- timeout (optional) is the maximum time to wait for an event before returning. Default is to wait forever
 function epoll_methods:dispatch ( max_events , timeout )
 	max_events = max_events or 1
-	if max_events > wait_size then -- Expand the array
-		wait_events = ffi.new ( "struct epoll_event[?]" , max_events )
-		wait_size = max_events
+	if max_events > self.wait_size then -- Expand the array
+		self.wait_events = ffi.new ( "struct epoll_event[?]" , max_events )
+		self.wait_size = max_events
 	end
 	if timeout then
 		timeout = timeout * 1000
 	else
 		timeout = -1
 	end
-	local n = ffi.C.epoll_wait ( self.epfd.fd , wait_events , max_events , timeout )
+	local n = ffi.C.epoll_wait ( self.epfd.fd , self.wait_events , max_events , timeout )
 	if n == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	for i=0,n-1 do
-		local events = wait_events[i].events
-		local fd = wait_events[i].data.fd
-		fd = assert ( self.raw_fd_map [ fd ] )
+		local events = self.wait_events[i].events
+		local fd = self.wait_events[i].data.fd
+		fd = self.raw_fd_map [ fd ]
 		local cbs = self.registered [ fd ]
 		if cbs.oneshot then
 			if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then

@@ -8,7 +8,12 @@ local netinet_in = include "netinet/in"
 include "arpa/inet"
 
 local sock_methods = { }
-local sock_mt = { __index = sock_methods ; }
+local sock_mt = {
+	__index = sock_methods ;
+	__tostring = function ( self )
+		return "socket{fd=" .. tostring(self.fd) .. ";type=\"" .. self.type .. "\"}"
+	end ;
+}
 
 local function new_sock ( fd , type )
 	return setmetatable ( {

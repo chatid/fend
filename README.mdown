@@ -22,7 +22,7 @@ This module wraps raw file descriptors (ints) in a structure to attach methods.
 The module returns a constructor that takes the raw file descriptor:
 ``` lua
     new_fd = require "fend.fd"
-    stdin = new_fd ( 0 )`
+    stdin = new_fd ( 0 )
 ```
 
  - `fd:getfd ( )`  

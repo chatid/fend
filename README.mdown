@@ -36,7 +36,7 @@ The module returns a constructor that takes the raw file descriptor:
 A non-blocking luasocket-like interface
 
  - `sock = socket.new_tcp ( domain )`  
- 	Creates a new socket with the given domain (where `domain` is an `AF_*`; these can conviniently be found in an addrinfo structure: `addrinfo.ai_family` (see DNS section))
+ 	Creates a new socket with the given domain (where `domain` is an `AF_*`; these can conveniently be found in an addrinfo structure: `addrinfo.ai_family` (see DNS section))
 
  - `sock:getfd ( )`  
  	Returns the raw file descriptor for the socket

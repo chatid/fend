@@ -71,6 +71,7 @@ local function new_epoll ( guesstimate )
 			-- Data structures for dispatch
 			wait_size = 0 ;
 			wait_events = nil ;
+			locked = false ;
 		} , epoll_mt )
 	sigfds_to_epoll_obs [ sigfd ] = self
 
@@ -115,10 +116,17 @@ function epoll_methods:del_fd ( fd )
 	self.raw_fd_map [ fd:getfd() ] = nil
 end
 
+function epoll_methods:remove_lock ( )
+	self.locked = false
+end
+
 --- Wait for a number of events and call their callbacks.
+-- Raising an error in a callback will propagate through, leaving the dispatch operation locked.
 -- max_events (optional) is the number of events to wait for. Defaults to 1.
 -- timeout (optional) is the maximum time to wait for an event before returning. Default is to wait forever
 function epoll_methods:dispatch ( max_events , timeout )
+	if self.locked then error ( "dispatch already running, call :remove_lock() to recover" ) end
+	self.locked = true
 	max_events = max_events or 1
 	if max_events > self.wait_size then -- Expand the array
 		self.wait_events = ffi.new ( "struct epoll_event[?]" , max_events )
@@ -131,6 +139,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 	end
 	local n = ffi.C.epoll_wait ( self.epfd.fd , self.wait_events , max_events , timeout )
 	if n == -1 then
+		self.locked = false
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	for i=0,n-1 do
@@ -140,6 +149,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 		local cbs = self.registered [ fd ]
 		if cbs.oneshot then
 			if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
+				self.locked = false
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
 			self.registered [ fd ] = nil
@@ -175,6 +185,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 			end
 		end
 	end
+	self.locked = false
 end
 
 --- Watch for a signal.

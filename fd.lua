@@ -1,6 +1,6 @@
 local ffi = require "ffi"
 local bit = require "bit"
-require "ffi_ev.common"
+require "fend.common"
 local fcntl = include "fcntl"
 include "unistd"
 

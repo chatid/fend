@@ -1,6 +1,6 @@
 local ffi = require "ffi"
-local new_fd = require "ffi_ev.fd"
-require "ffi_ev.common"
+local new_fd = require "fend.fd"
+require "fend.common"
 include "stdio"
 local errors = include "errno"
 local socket = include "sys/socket"

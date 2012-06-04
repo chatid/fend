@@ -4,8 +4,8 @@
 
 local ffi = require "ffi"
 local bit = require "bit"
-local new_fd = require "ffi_ev.fd"
-require "ffi_ev.common"
+local new_fd = require "fend.fd"
+require "fend.common"
 include "stdio"
 include "strings"
 include "sys/signalfd"

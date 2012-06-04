@@ -1,5 +1,5 @@
 local ffi = require "ffi"
-require "ffi_ev.common"
+require "fend.common"
 local ssl = ffi.load ( "ssl" )
 local ssl_defs = include "openssl/ssl"
 local err = include "openssl/err"

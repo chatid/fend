@@ -187,6 +187,7 @@ function sock_methods:getpeername ( )
 	if ffi.C.getpeername ( sock:getfd() , sockaddr , sockaddr_len ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
+	return sockaddr , sockaddr_len[0]
 end
 
 -- Create tcp/ipv? streaming socket

@@ -168,23 +168,23 @@ local function new_context ( params )
 		self:loadkey ( params.key , params.password )
 	end
 	if params.certificate then
-    	self:loadcert ( params.certificate )
-   	end
+		self:loadcert ( params.certificate )
+		end
 	if params.cafile or params.capath then
-    	self:locations ( params.cafile , params.capath )
-    end
-    if params.verify then
-    	self:set_verify ( params.verify )
-    end
-    if params.options then
-    	self:set_options ( params.options )
-    end
-    if params.ciphers then
-    	self:set_cipher ( params.ciphers )
-    end
-    if params.depth then
-    	self:set_depth ( params.depth )
-    end
+		self:locations ( params.cafile , params.capath )
+	end
+	if params.verify then
+		self:set_verify ( params.verify )
+	end
+	if params.options then
+		self:set_options ( params.options )
+	end
+	if params.ciphers then
+		self:set_cipher ( params.ciphers )
+	end
+	if params.depth then
+		self:set_depth ( params.depth )
+	end
 	return self
 end
 
@@ -243,7 +243,7 @@ function ssl_methods:close ( )
 end
 
 ffi.metatype ( "SSL" , {
-	__index =  ssl_methods ;
+	__index = ssl_methods ;
 	__gc = function ( self )
 		ssl.SSL_free ( self )
 		original_socks [ self ] = nil

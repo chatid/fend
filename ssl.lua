@@ -26,7 +26,12 @@ ssl.SSL_load_error_strings()
 ssl.SSL_library_init()
 
 local function geterr()
-	return ffi.string ( ssl.ERR_reason_error_string ( ssl.ERR_get_error ( ) ) )
+	local err = ssl.ERR_get_error ( )
+	if err == 0 then
+		return nil
+	else
+		return ffi.string ( ssl.ERR_reason_error_string ( err ) )
+	end
 end
 
 local context_methods = { }
@@ -198,17 +203,30 @@ function ssl_methods:getfd ( )
 	return original_socks [ self ].file:getfd ( )
 end
 
+local function handle_err ( err , c )
+	if err == ssl_defs.SSL_ERROR_WANT_READ then
+		return nil , "wantread"
+	elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
+		return nil , "wantwrite"
+	elseif err == ssl_defs.SSL_ERROR_SYSCALL then
+		local ssl_err = geterr()
+		if ssl_err then
+			return ssl_err
+		elseif c == 0 then
+			return nil , "EOF"
+		elseif c == -1 then
+			return nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) )
+		end
+		return nil , "syscall"
+	else
+		return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
+	end
+end
+
 function ssl_methods:recv ( buff , len )
 	local c = ssl.SSL_read ( self , buff , len )
 	if c <= 0 then
-		local err = ssl.SSL_get_error ( self , c )
-		if err == ssl_defs.SSL_ERROR_WANT_READ then
-			return nil , "wantread"
-		elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
-			return nil , "wantwrite"
-		else
-			return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
-		end
+		return handle_err ( ssl.SSL_get_error ( self , c ) , c )
 	end
 	return c
 end
@@ -218,13 +236,7 @@ function ssl_methods:send ( buff , len )
 	len = len or #buff
 	local c = ssl.SSL_write ( self , buff , len )
 	if c <= 0 then
-		if err == ssl_defs.SSL_ERROR_WANT_READ then
-			return nil , "wantread"
-		elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
-			return nil , "wantwrite"
-		else
-			return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
-		end
+		return handle_err ( ssl.SSL_get_error ( self , c ) , c )
 	end
 	return c
 end
@@ -232,14 +244,7 @@ end
 function ssl_methods:dohandshake ( )
 	local c = ssl.SSL_do_handshake ( self )
 	if c ~= 1 then
-		local err = ssl.SSL_get_error ( self , c )
-		if err == ssl_defs.SSL_ERROR_WANT_READ then
-			return nil , "wantread"
-		elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
-			return nil , "wantwrite"
-		else
-			return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
-		end
+		return handle_err ( ssl.SSL_get_error ( self , c ) , c )
 	end
 	return true
 end

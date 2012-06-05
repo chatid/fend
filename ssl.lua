@@ -148,7 +148,6 @@ ffi.metatype ( "t_context" , context_mt )
 
 local protocol_to_method = {
 	tlsv1 = ssl.TLSv1_method() ;
-	sslv2 = ssl.SSLv2_method() ;
 	sslv3 = ssl.SSLv3_method() ;
 	sslv23 = ssl.SSLv23_method() ;
 }

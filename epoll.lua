@@ -231,7 +231,23 @@ function epoll_methods:del_signal ( signum , id )
 	end
 end
 
+local file_to_timer = setmetatable ( { } , { __mode = "k" ; } )
 local timerspec = ffi.new ( "struct itimerspec[1]" )
+local timer_cbs = {
+	read = function ( file , cbs )
+		local timer = file_to_timer [ file ]
+		local expired = ffi.new ( "uint64_t[1]" )
+		local c = tonumber ( ffi.C.read ( file:getfd() , expired , ffi.sizeof ( expired ) ) )
+		if c == -1 then
+			timer.cb ( nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		end
+		--assert ( c == ffi.sizeof ( expired ) )
+		local start , interval = timer.cb ( timer , expired[0] )
+		if start then
+			timer:set ( start , interval )
+		end
+	end ;
+}
 local timer_mt = {
 	__index = {
 		set = function ( timer , value , interval , flags )
@@ -244,9 +260,11 @@ local timer_mt = {
 			if ffi.C.timerfd_settime ( timer.file:getfd() , flags , timerspec , nil ) == -1 then
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
+			timer.dispatcher:add_fd ( timer.file , timer_cbs )
 		end ;
 		disarm = function ( timer )
 			timer:set ( 0 , 0 )
+			timer.dispatcher:del_fd ( timer.file )
 		end ;
 		status = function ( timer )
 			if ffi.C.timerfd_gettime ( timer.file:getfd() , timerspec ) == -1 then
@@ -269,22 +287,13 @@ function epoll_methods:add_timer ( start , interval , cb )
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	timerfd = new_file ( timerfd )
-	local timer = setmetatable ( { file = timerfd } , timer_mt )
+	local timer = setmetatable ( {
+			file = timerfd ;
+			dispatcher = self ;
+			cb = cb ;
+		} , timer_mt )
+	file_to_timer [ timerfd ] = timer
 
-	self:add_fd ( timerfd , {
-		read = function ( file )
-			local expired = ffi.new ( "uint64_t[1]" )
-			local c = tonumber ( ffi.C.read ( file:getfd() , expired , ffi.sizeof ( expired ) ) )
-			if c == -1 then
-				cb ( nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-			end
-			--assert ( c == ffi.sizeof ( expired ) )
-			start , interval = cb ( timer , expired[0] )
-			if start then
-				timer:set ( start , interval )
-			end
-		end ;
-	} )
 	timer:set ( start , interval )
 
 	return timer

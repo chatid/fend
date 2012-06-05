@@ -249,9 +249,16 @@ function ssl_methods:dohandshake ( )
 	return true
 end
 
--- SSL_shutdown may need extra data... we don't care.. I hope
+-- This method cannot be called as the SSL structure has a field 'shutdown'
+function ssl_methods:shutdown ( )
+	local c = ssl.SSL_shutdown ( self )
+	if c <= 0 then
+		return handle_err ( ssl.SSL_get_error ( self , c ) , c )
+	end
+	return true
+end
+
 function ssl_methods:close ( )
-	ssl.SSL_shutdown ( self )
 	original_socks [ self ]:close ( )
 end
 

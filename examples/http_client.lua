@@ -72,7 +72,14 @@ local function request ( url , e , cb )
 			sock:connect ( addrinfo , e , function ( sock , err )
 					if not sock then onconnect ( nil , err ) end
 					if url.scheme == "https" then
-						handshake ( ssl.wrap ( sock , { mode = "client", protocol = "sslv23" } ) , e , onconnect )
+						local timer = e:add_timer ( 5 , 0 , function ( timer , n )
+								e:del_fd ( sock:getfile() )
+								onconnect ( nil , "handshake timeout" )
+							end )
+						handshake ( ssl.wrap ( sock , { mode = "client", protocol = "sslv23" } ) , e , function ( ... )
+								timer:disarm ( )
+								onconnect ( ... )
+							end )
 					else
 						onconnect ( sock )
 					end

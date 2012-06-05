@@ -4,7 +4,7 @@
 
 local ffi = require "ffi"
 local bit = require "bit"
-local new_fd = require "fend.fd"
+local new_file = require "fend.file"
 require "fend.common"
 include "stdio"
 include "strings"
@@ -13,13 +13,13 @@ include "sys/timerfd"
 local time = include "time"
 local epoll_lib = include "sys/epoll"
 
-local sigfds_to_epoll_obs = setmetatable ( { } , { __mode = "kv" } )
+local sigfiles_to_epoll_obs = setmetatable ( { } , { __mode = "kv" } )
 local signal_cb_table = {
-	read = function ( fd )
-		local self = sigfds_to_epoll_obs [ fd ]
+	read = function ( file )
+		local self = sigfiles_to_epoll_obs [ file ]
 
 		local info = ffi.new ( "struct signalfd_siginfo[1]" )
-		local r = tonumber ( ffi.C.read ( fd.fd , info , ffi.sizeof ( info ) ) )
+		local r = tonumber ( ffi.C.read ( file:getfd() , info , ffi.sizeof ( info ) ) )
 		if r == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
@@ -45,7 +45,7 @@ local function new_epoll ( guesstimate )
 	if epfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	epfd = new_fd ( epfd )
+	epfd = new_file ( epfd )
 
 	local mask = ffi.new ( "sigset_t[1]" )
 	if ffi.C.sigemptyset ( mask ) == -1 then
@@ -55,12 +55,12 @@ local function new_epoll ( guesstimate )
 	if sigfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	sigfd = new_fd ( sigfd )
+	sigfd = new_file ( sigfd )
 
 	local self = setmetatable ( {
-			epfd = epfd ;
+			epfile = epfd ;
 			-- Signal handling stuff
-			sigfd = sigfd ;
+			sigfile = sigfd ;
 			sigmask = mask ;
 			sigcbs = { } ;
 
@@ -73,7 +73,7 @@ local function new_epoll ( guesstimate )
 			wait_events = nil ;
 			locked = false ;
 		} , epoll_mt )
-	sigfds_to_epoll_obs [ sigfd ] = self
+	sigfiles_to_epoll_obs [ sigfd ] = self
 
 	self:add_fd ( sigfd , signal_cb_table )
 
@@ -83,9 +83,10 @@ end
 --- Add a file descriptor to be watched.
 -- fd is the file descriptor to watch
 -- cbs is a table of callbacks, the events to watch for are selected based on the callbacks given
-function epoll_methods:add_fd ( fd , cbs )
+function epoll_methods:add_fd ( file , cbs )
+	local fd = file:getfd()
 	local op
-	if self.registered [ fd ] then
+	if self.registered [ file ] then
 		op = epoll_lib.EPOLL_CTL_MOD
 	else
 		op = epoll_lib.EPOLL_CTL_ADD
@@ -97,23 +98,24 @@ function epoll_methods:add_fd ( fd , cbs )
 		cbs.write and ffi.C.EPOLLOUT or 0 ,
 		cbs.oneshot and ffi.C.EPOLLONESHOT or 0 ,
 		ffi.C.EPOLLRDHUP )
-	__events[0].data.fd = fd.fd
+	__events[0].data.fd = fd
 
-	if ffi.C.epoll_ctl ( self.epfd.fd , op , fd.fd , __events ) ~= 0 then
+	if ffi.C.epoll_ctl ( self.epfile:getfd() , op , fd , __events ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	self.registered [ fd ] = cbs
-	self.raw_fd_map [ fd:getfd() ] = fd
+	self.registered [ file ] = cbs
+	self.raw_fd_map [ fd ] = file
 end
 
 --- Stop watching a file descriptor
 -- fd is the file descriptor to stop watching
-function epoll_methods:del_fd ( fd )
-	if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
+function epoll_methods:del_fd ( file )
+	local fd = file:getfd()
+	if ffi.C.epoll_ctl ( self.epfile:getfd() , epoll_lib.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	self.registered [ fd ] = nil
-	self.raw_fd_map [ fd:getfd() ] = nil
+	self.registered [ file ] = nil
+	self.raw_fd_map [ fd ] = nil
 end
 
 function epoll_methods:remove_lock ( )
@@ -137,7 +139,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 	else
 		timeout = -1
 	end
-	local n = ffi.C.epoll_wait ( self.epfd.fd , self.wait_events , max_events , timeout )
+	local n = ffi.C.epoll_wait ( self.epfile:getfd() , self.wait_events , max_events , timeout )
 	if n == -1 then
 		self.locked = false
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
@@ -145,43 +147,43 @@ function epoll_methods:dispatch ( max_events , timeout )
 	for i=0,n-1 do
 		local events = self.wait_events[i].events
 		local fd = self.wait_events[i].data.fd
-		fd = self.raw_fd_map [ fd ]
-		local cbs = self.registered [ fd ]
+		local file = self.raw_fd_map [ fd ]
+		local cbs = self.registered [ file ]
 		if cbs.oneshot then
-			if ffi.C.epoll_ctl ( self.epfd.fd , epoll_lib.EPOLL_CTL_DEL , fd.fd , nil ) ~= 0 then
+			if ffi.C.epoll_ctl ( self.epfile:getfd() , epoll_lib.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
 				self.locked = false
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
-			self.registered [ fd ] = nil
-			self.raw_fd_map [ fd:getfd() ] = nil
+			self.registered [ file ] = nil
+			self.raw_fd_map [ fd ] = nil
 		end
 		if bit.band ( events , ffi.C.EPOLLIN ) ~= 0 then
 			if cbs.read then
-				cbs.read ( fd , cbs )
+				cbs.read ( file , cbs )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
 			if cbs.write then
-				cbs.write ( fd , cbs )
+				cbs.write ( file , cbs )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
-			self:del_fd ( fd )
+			self:del_fd ( file )
 			if cbs.error then
-				cbs.error ( fd , cbs )
+				cbs.error ( file , cbs )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLRDHUP ) ~= 0 then
 			if cbs.rdclose then
-				cbs.rdclose ( fd , cbs )
+				cbs.rdclose ( file , cbs )
 			else
-				ffi.C.shutdown ( fd.fd , ffi.C.SHUT_RDWR )
+				ffi.C.shutdown ( fd , ffi.C.SHUT_RDWR )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then
-			self:del_fd ( fd )
+			self:del_fd ( file )
 			if cbs.close then
-				cbs.close ( fd , cbs )
+				cbs.close ( file , cbs )
 			end
 		end
 	end
@@ -206,7 +208,7 @@ function epoll_methods:add_signal ( signum , cb )
 		if ffi.C.sigaddset ( self.sigmask , signum ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
-		if ffi.C.signalfd ( self.sigfd.fd , self.sigmask , 0 ) == -1 then
+		if ffi.C.signalfd ( self.sigfile:getfd() , self.sigmask , 0 ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
 		return 1
@@ -223,7 +225,7 @@ function epoll_methods:del_signal ( signum , id )
 		if ffi.C.sigdelset ( self.sigmask , signum ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
-		if ffi.C.signalfd ( self.sigfd.fd , self.sigmask , 0 ) == -1 then
+		if ffi.C.signalfd ( self.sigfile:getfd() , self.sigmask , 0 ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
 	end
@@ -239,7 +241,7 @@ local timer_mt = {
 			timerspec[0].it_interval.tv_nsec = ( interval % 1 )*1e9
 			timerspec[0].it_value.tv_sec = math.floor ( value )
 			timerspec[0].it_value.tv_nsec = ( value % 1 )*1e9
-			if ffi.C.timerfd_settime ( timer.fd.fd , flags , timerspec , nil ) == -1 then
+			if ffi.C.timerfd_settime ( timer.file:getfd() , flags , timerspec , nil ) == -1 then
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
 		end ;
@@ -247,7 +249,7 @@ local timer_mt = {
 			timer:set ( 0 , 0 )
 		end ;
 		status = function ( timer )
-			if ffi.C.timerfd_gettime ( timer.fd.fd , timerspec ) == -1 then
+			if ffi.C.timerfd_gettime ( timer.file:getfd() , timerspec ) == -1 then
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end
 			return tonumber ( timerspec[0].it_value.tv_sec ) + tonumber ( timerspec[0].it_value.tv_nsec ) / 1e9 ,
@@ -266,13 +268,13 @@ function epoll_methods:add_timer ( start , interval , cb )
 	if timerfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	timerfd = new_fd ( timerfd )
-	local timer = setmetatable ( { fd = timerfd } , timer_mt )
+	timerfd = new_file ( timerfd )
+	local timer = setmetatable ( { file = timerfd } , timer_mt )
 
 	self:add_fd ( timerfd , {
-		read = function ( fd )
+		read = function ( file )
 			local expired = ffi.new ( "uint64_t[1]" )
-			local c = tonumber ( ffi.C.read ( fd.fd , expired , ffi.sizeof ( expired ) ) )
+			local c = tonumber ( ffi.C.read ( file:getfd() , expired , ffi.sizeof ( expired ) ) )
 			if c == -1 then
 				cb ( nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end

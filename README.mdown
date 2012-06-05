@@ -16,19 +16,19 @@ Just place the `fend` directory in your lua module search path
 Modules
 -------
 
-### FD
-This module wraps raw file descriptors (ints) in a structure to attach methods.
+### File
+This module wraps raw file descriptors (usually ints) in a structure to attach methods.
 
 The module returns a constructor that takes the raw file descriptor:
 ``` lua
-    new_fd = require "fend.fd"
+    new_file = require "fend.file"
     stdin = new_fd ( 0 )
 ```
 
- - `fd:getfd ( )`  
+ - `file:getfd ( )`  
  	returns the raw file descriptor
 
- - `fd:set_blocking ( bool )`  
+ - `file:set_blocking ( bool )`  
  	sets the `O_NONBLOCK` flag
 
 

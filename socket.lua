@@ -1,5 +1,5 @@
 local ffi = require "ffi"
-local new_fd = require "fend.fd"
+local new_file = require "fend.file"
 require "fend.common"
 include "stdio"
 local errors = include "errno"
@@ -11,29 +11,33 @@ local sock_methods = { }
 local sock_mt = {
 	__index = sock_methods ;
 	__tostring = function ( self )
-		return "socket{fd=" .. tostring(self.fd) .. ";type=\"" .. self.type .. "\"}"
+		return "socket{file=" .. tostring(self.file) .. ";type=\"" .. self.type .. "\"}"
 	end ;
 }
 
-local function new_sock ( fd , type )
+local function new_sock ( file , type )
 	return setmetatable ( {
-			fd = fd ;
+			file = file ;
 			type = type ; -- A string describing the socket
 		} , sock_mt )
 end
 
+function sock_methods:getfile ( )
+	return self.file
+end
+
 function sock_methods:getfd ( )
-	return self.fd:getfd ( )
+	return self.file:getfd ( )
 end
 
 function sock_methods:close ( )
-	self.fd:close ( )
+	self.file:close ( )
 end
 
-local function getsockerr ( fd  )
+local function getsockerr ( file  )
 	local err , err_len = ffi.new ( "int[1]" ) , ffi.new ( "socklen_t[1]" )
 	err_len[0] = ffi.sizeof ( err )
-	if ffi.C.getsockopt ( fd.fd , socket.SOL_SOCKET , socket.SO_ERROR , err , err_len ) ~= 0 then
+	if ffi.C.getsockopt ( file:getfd() , socket.SOL_SOCKET , socket.SO_ERROR , err , err_len ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	return err[0]
@@ -46,8 +50,8 @@ function sock_methods:connect ( addrinfo , epoll_ob , cb )
 			cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
 		end
 	end
-	epoll_ob:add_fd ( self.fd , { write = function ( fd )
-			local err = getsockerr ( fd )
+	epoll_ob:add_fd ( self.file , { write = function ( file )
+			local err = getsockerr ( file )
 			if err ~= 0 then
 				cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
 			end
@@ -87,9 +91,9 @@ function sock_methods:accept ( with_sockaddr )
 	if clientfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	local client = new_sock ( new_fd ( clientfd ) , self.type )
+	local client = new_sock ( new_file ( clientfd ) , self.type )
 	client.connected = true
-	client.fd:set_blocking ( false )
+	client.file:set_blocking ( false )
 	if with_sockaddr then
 		return client , sockaddr , sockaddr_len[0]
 	else
@@ -132,25 +136,25 @@ function sock_methods:read ( buff , len , epoll_ob , cb )
 		buff = ffi.new ( "char[?]" , len )
 	end
 	local have = 0
-	epoll_ob:add_fd ( self.fd , {
-			read = function ( fd )
+	epoll_ob:add_fd ( self.file , {
+			read = function ( file )
 				local c , err = self:recv ( buff+have , len-have )
 				if not c then
-					epoll_ob:del_fd ( fd )
+					epoll_ob:del_fd ( file )
 					cb ( self , nil , err , buff , have ) -- Partial result
 					return
 				end
 				have = have + c
 				if have == len then
-					epoll_ob:del_fd ( fd )
+					epoll_ob:del_fd ( file )
 					cb ( self , buff , c )
 					return
 				end
 			end ;
-			close = function ( fd )
+			close = function ( file )
 				cb ( self , nil , "closed" , buff , have ) -- Partial result
 			end ;
-			error = function ( fd , err )
+			error = function ( file , err )
 				cb ( self , nil , err , buff , have ) -- Partial result
 			end
 		} )
@@ -162,11 +166,11 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 		buff = ffi.cast ( "const char *" , buff )
 	end
 	local bytes_written = 0
-	epoll_ob:add_fd ( self.fd , {
-			write = function ( fd )
+	epoll_ob:add_fd ( self.file , {
+			write = function ( file )
 				local c , err = self:send ( buff+bytes_written , len-bytes_written )
 				if not c then
-					epoll_ob:del_fd ( fd )
+					epoll_ob:del_fd ( file )
 					cb ( self , nil , err , bytes_written )
 					return
 				end
@@ -174,11 +178,11 @@ function sock_methods:write ( buff , len , epoll_ob , cb )
 				if bytes_written < len then
 					buff = buff + c
 				else
-					epoll_ob:del_fd ( fd )
+					epoll_ob:del_fd ( file )
 					cb ( self , bytes_written )
 				end
 			end ;
-			error = function ( fd , err )
+			error = function ( file , err )
 				cb ( self , nil , err , bytes_written )
 			end
 		} )
@@ -199,8 +203,8 @@ local function new_tcp ( domain )
 	if fd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	local sock = new_sock ( new_fd ( fd ) , "TCP" )
-	sock.fd:set_blocking ( false )
+	local sock = new_sock ( new_file ( fd ) , "TCP" )
+	sock.file:set_blocking ( false )
 	return sock
 end
 

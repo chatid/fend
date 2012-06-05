@@ -7,26 +7,26 @@ include "unistd"
 ffi.cdef [[
 	typedef struct {
 		const int fd;
-		bool closed;
-	} fd_t;
+		bool no_close:1; // Should the file handle be closed on collection?
+	} file_t;
 ]]
 
-local new = ffi.typeof ( "fd_t" )
-local fd_methods = { }
+local new = ffi.typeof ( "file_t" )
+local file_methods = { }
 
-function fd_methods:close ( )
-	if not self.closed then
-		if ffi.C.close ( self.fd ) == -1 then
+function file_methods:close ( )
+	if not self.no_close then
+		if ffi.C.close ( self:getfd() ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
-		self.closed = true
+		self.no_close = true
 	end
 end
-function fd_methods:getfd ( )
+function file_methods:getfd ( )
 	return self.fd
 end
 
-function fd_methods:set_blocking ( bool )
+function file_methods:set_blocking ( bool )
 	local flags = ffi.C.fcntl ( self:getfd() , fcntl.F_GETFL )
 	if flags == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
@@ -41,10 +41,10 @@ function fd_methods:set_blocking ( bool )
 	end
 end
 
-ffi.metatype ( "fd_t" , {
-		__index = fd_methods ;
+ffi.metatype ( "file_t" , {
+		__index = file_methods ;
 		__tostring = function ( self )
-			return "fd(" .. tostring(self:getfd()) .. ")"
+			return "file(" .. tostring(self:getfd()) .. ")"
 		end ;
 		__gc = function ( self )
 			self:close ( )

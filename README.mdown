@@ -38,8 +38,11 @@ A non-blocking luasocket-like interface
  - `sock = socket.new_tcp ( domain )`  
  	Creates a new socket with the given domain (where `domain` is an `AF_*`; these can conveniently be found in an addrinfo structure: `addrinfo.ai_family` (see DNS section))
 
+ - `sock:getfile ( )`
+ 	Returns the file descriptor for the socket
+
  - `sock:getfd ( )`  
- 	Returns the raw file descriptor for the socket
+ 	Shortcut for `sock:getfile():getfd()`
 
  - `sock:set_option ( option , val )`  
  	Calls `setsockopt` with the given option (a string, eg `"REUSEADDR"`) and `int` val

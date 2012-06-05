@@ -190,6 +190,14 @@ end
 local original_socks = { } -- We have to keep the originals around to stop them getting closed on collection
 local ssl_methods = { }
 
+function ssl_methods:getfile ( )
+	return original_socks [ self ].file
+end
+
+function ssl_methods:getfd ( )
+	return original_socks [ self ].file:getfd ( )
+end
+
 function ssl_methods:recv ( buff , len )
 	local c = ssl.SSL_read ( self , buff , len )
 	if c <= 0 then

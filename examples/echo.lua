@@ -12,8 +12,8 @@ return function ( e , addrinfo , len )
 	serv:bind ( addrinfo )
 	serv:listen ( )
 
-	e:add_fd ( serv.fd , {
-			read = function ( fd )
+	e:add_fd ( serv:getfile() , {
+			read = function ( file )
 				local client , sockaddr , sockaddr_len = serv:accept ( true )
 				print("CLIENT CONNECTED",dns.addrinfo_to_string ( sockaddr , sockaddr_len ))
 				local buff = ffi.new("char[?]",len)
@@ -22,7 +22,7 @@ return function ( e , addrinfo , len )
 				local sent = 0
 
 				local read , write
-				function read ( fd , cbs )
+				function read ( file , cbs )
 					local max = len-(append-sent)
 					if max == 0 then return end -- Buffer full
 
@@ -32,9 +32,9 @@ return function ( e , addrinfo , len )
 					if c == max then
 						cbs.read = nil
 					end
-					e:add_fd ( fd , cbs )
+					e:add_fd ( file , cbs )
 				end
-				function write ( fd , cbs )
+				function write ( file , cbs )
 					local max = append-sent
 					if max == 0 then return end -- Buffer empty
 
@@ -45,9 +45,9 @@ return function ( e , addrinfo , len )
 					if c == max then
 						cbs.write = nil
 					end
-					e:add_fd ( fd , cbs )
+					e:add_fd ( file , cbs )
 				end
-				e:add_fd ( client.fd , { read = read } )
+				e:add_fd ( client:getfile() , { read = read } )
 			end ;
 		} )
 

@@ -3,7 +3,7 @@ require "fend.common"
 include "stdio"
 include "unistd"
 include "strings" -- For strerror
-local new_fd = require "fend.fd"
+local new_file = require "fend.file"
 local epoll = require "fend.epoll"
 local dns = require "fend.dns"
 local socket = require "fend.socket"
@@ -12,24 +12,24 @@ local dontquit = true
 
 local e = epoll()
 
-local stdin = new_fd ( io.stdin )
+local stdin = new_file ( io.stdin )
 e:add_fd ( stdin , {
-	read = function ( fd )
+	read = function ( file )
 		local len = 80
 		local buff = ffi.new("char[?]",len)
-		local c = tonumber ( ffi.C.read ( fd:getfd() , buff , len ) )
+		local c = tonumber ( ffi.C.read ( file:getfd() , buff , len ) )
 		if c == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
 		local str = ffi.string(buff,c)
 		if str:match("^quit%s") then dontquit = false end
 	end ;
-	close = function ( fd )
-		e:del_fd ( fd )
+	close = function ( file )
+		e:del_fd ( file )
 	end ;
 } )
 
-require "fend.examples.http_client".request ( "http://google.com" , e , function ( b ) print(b) end )
+require "fend.examples.http_client".request ( "https://mail.google.com/mail/" , e , function ( b ) print(b) end )
 
 local t1 = e:add_timer ( 1 , 1 , function ( timer , n )
 		print("timer1")

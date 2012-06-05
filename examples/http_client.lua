@@ -25,14 +25,62 @@ local function handshake ( sock , e , cb )
 end ;
 
 local function request ( url , e , cb )
-	local ret = { }
-	local function onincoming ( sock , buff , len )
-		table.insert ( ret , ffi.string ( buff , len ) )
+	local ret = { headers = { } , body = { } }
+	local onincoming
+	local state = "new"
+	local saved = ""
+	local bodylen = 0
+	local function onclose ( sock )
+		ret.body = table.concat(ret.body)
+
+		local t = {
+			"Code = " .. ret.code ;
+		}
+		for k , v in pairs ( ret.headers ) do
+			table.insert(t,k.." = " ..v)
+		end
+		table.insert(t,"Body = " .. ret.body)
+		print ( table.concat ( t , "\n" ) )
+		cb ( ret )
+	end
+	function onincoming ( sock , buff , len )
+		local str = ffi.string ( buff , len )
+		if state == "new" or state == "headers" then
+			local from = 0
+			while true do
+				local s , e = str:find ( "\r\n" , from+1 )
+				if not s then break end
+				local line = saved .. str:sub ( from+1 , s-1 )
+				if #line == 0 then
+					state = "body"
+					from = e
+					break
+				end
+				if state == "new" then
+					ret.major , ret.minor , ret.code , ret.status = line:match("HTTP/(%d).(%d) (%d+) ?(.*)")
+					state = "headers"
+				elseif state == "headers" then
+					local name , value = line:match ( "([^:]+): (.+)" )
+					if not name then cb ( nil , "Invalid Header" ) end
+					ret.headers [ name ] = value
+				end
+				saved = ""
+				from = e
+			end
+			saved = saved .. str:sub ( from+1 )
+			str = saved
+		end
+		if state == "body" then
+			table.insert ( ret.body , str )
+			bodylen = bodylen + #str
+			if bodylen >= tonumber ( ret.headers["Content-Length"] ) then
+				state = "done"
+				sock:close ( )
+			end
+		end
 		return false
 	end
-	local function onclose ( sock )
-		cb ( table.concat ( ret ) )
-	end
+
 	local function onconnect ( sock , err)
 		if not sock then error ( "Connection failed: " .. err ) end
 
@@ -52,13 +100,20 @@ local function request ( url , e , cb )
 				end ;
 				read = function ( file , cbs )
 					local c = assert ( sock:recv ( buff , len ) )
+					if c == 0 then return end
 					local new_buffs , new_len = onincoming ( sock , buff , c )
 					if new_buffs then
 						len = new_len or len
 						buff = ffi.new("char[?]",len)
 					end
 				end ;
-				close = function ( file )
+				rdclose = function ( file , cbs )
+					e:del_fd ( file , cbs )
+					cbs.read ( file , cbs )
+					onclose ( sock )
+				end ;
+				close = function ( file , cbs )
+					e:del_fd ( file , cbs )
 					onclose ( sock )
 				end ;
 			} )

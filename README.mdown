@@ -84,9 +84,11 @@ Provides dns and host based utilities.
  - `dns.lookup ( hostname , port )`  
  	Completes a blocking lookup, returning an `addrinfo` structure
 
- - `dns.lookup_async ( hostname , port , epoll_ob , cb )`  
+ - `dns.lookup_async ( hostname , port , epoll_ob , callback )`  
  	Does a non-blocking dns lookup, and when ready (dispatched via the `epoll_ob`).  
- 	Will call callback `cb` with an `addrinfo` structure.
+ 	Will call callback `cb` with an `addrinfo` structure.  
+ 	Returns an object with methods:  
+		`wait`: blocks until the lookup is completed (or until `timeout`). returns boolean indicating success/failure
 
 
 Examples

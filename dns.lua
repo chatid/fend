@@ -33,12 +33,6 @@ local function lookup ( hostname , port )
 	return ffi.gc ( res[0] , ffi.C.freeaddrinfo )
 end
 
-local counter_i = 0
-local function counter ( )
-	counter_i = counter_i + 1
-	return counter_i
-end
-
 -- Select a signal to use, and block it
 local signum = ffi.C.__libc_current_sigrtmin()
 local mask = ffi.new ( "sigset_t[1]" )
@@ -48,6 +42,11 @@ if ffi.C.sigprocmask ( signal.SIG_BLOCK , mask , nil ) ~= 0 then
 	error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 end
 
+--- Lookup the given hostname and port
+-- Adds a watch for completion to `epoll_ob`, and when done calls
+-- `cb` is called when done, gets argument of an `addrinfo`, or `nil , err` on failure
+-- returns a table with methods:
+--	`wait`: blocks until the lookup is completed (or until `timeout`). returns boolean indicating success/failure
 local function lookup_async ( hostname , port , epoll_ob , cb )
 	local items = 1
 	local list = ffi.new ( "struct gaicb[?]" , items )
@@ -56,20 +55,20 @@ local function lookup_async ( hostname , port , epoll_ob , cb )
 		list[0].ar_service = tostring ( port )
 	end
 
-	local id = counter()
 	local sigevent = ffi.new ( "struct sigevent" )
 	sigevent.sigev_notify = ffi.C.SIGEV_SIGNAL
 	sigevent.sigev_signo = signum
-	sigevent.sigev_value.sival_int = id
+	sigevent.sigev_value.sival_ptr = list
 
-	epoll_ob:add_signal ( signum , function ( sig_info , cb_id )
-			local sigid = sig_info[0].ssi_int
-			if sigid == id then
-				local err = anl.gai_error ( list[0] )
-				if err ~= 0 then
-					error ( ffi.string ( anl.gai_strerror ( err ) ) )
+	local cb_id = epoll_ob:add_signal ( signum , function ( sig_info , cb_id )
+			local retlist = ffi.cast ( "struct gaicb*" , sig_info[0].ssi_ptr )
+			if retlist == list then
+				local err = anl.gai_error ( retlist[0] )
+				if err == 0 then
+					cb ( retlist[0].ar_result )
+				else
+					cb ( nil , ffi.string ( anl.gai_strerror ( err ) ) )
 				end
-				cb ( list[0].ar_result )
 				epoll_ob:del_signal ( signum , cb_id )
 			end
 		end )
@@ -78,6 +77,32 @@ local function lookup_async ( hostname , port , epoll_ob , cb )
 	if err ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( err ) ) )
 	end
+
+	return {
+		wait = function ( t , timeout )
+			local timespec = ffi.NULL
+			if timeout then
+				timespec = ffi.new ( "struct timespec[1]" )
+				timespec[0].tv_sec = math.floor ( timeout )
+				timespec[0].tv_nsec = ( timeout % 1 ) * 1e9
+			end
+			local err = anl.gai_suspend ( ffi.new ( "const struct gaicb*[1]" , {list} ) , items , timespec )
+			if err == 0 then
+				local err = anl.gai_error ( list[0] )
+				if err == 0 then
+					cb ( list[0].ar_result )
+				else
+					cb ( nil , ffi.string ( anl.gai_strerror ( err ) ) )
+				end
+				epoll_ob:del_signal ( signum , cb_id )
+				return true
+			elseif err == netdb.EAI_AGAIN or err == netdb.EAI_INTR then
+				return false
+			else
+				error ( ffi.string ( anl.gai_strerror ( err ) ) )
+			end
+		end ;
+	}
 end
 
 return {

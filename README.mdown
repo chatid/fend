@@ -97,6 +97,11 @@ Examples
  - `examples/all.lua`  
  	is a demonstration of every module working together
 
+ - `examples/http_client.lua`  
+ 	is a basic http client  
+ 	the module returns a table with functions:  
+ 		`request ( url , epoll_ob , callback )`
+
 
 Extra Information
 -----------------

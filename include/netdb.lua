@@ -189,6 +189,25 @@ module ( ... )
 GAI_WAIT = 0
 GAI_NOWAIT = 1
 
+EAI_BADFLAGS = -1 -- Invalid value for `ai_flags' field.
+EAI_NONAME = -2 -- NAME or SERVICE is unknown.
+EAI_AGAIN = -3 -- Temporary failure in name resolution.
+EAI_FAIL = -4 -- Non-recoverable failure in name res.
+EAI_FAMILY = -6 -- `ai_family' not supported.
+EAI_SOCKTYPE = -7 -- `ai_socktype' not supported.
+EAI_SERVICE = -8 -- SERVICE not supported for `ai_socktype'.
+EAI_MEMORY = -10 -- Memory allocation failure.
+EAI_SYSTEM = -11 -- System error returned in `errno'.
+EAI_OVERFLOW = -12 -- Argument buffer overflow.
+EAI_NODATA = -5 -- No address associated with NAME.
+EAI_ADDRFAMILY = -9 -- Address family for NAME not supported.
+EAI_INPROGRESS = -100 -- Processing request in progress.
+EAI_CANCELED = -101 -- Request canceled.
+EAI_NOTCANCELED = -102 -- Request not canceled.
+EAI_ALLDONE = -103 -- All requests done.
+EAI_INTR = -104 -- Interrupted by a signal.
+EAI_IDN_ENCODE = -105 -- IDN encoding failed.
+
 NI_MAXSERV = 32
 NI_MAXHOST = 1025
 

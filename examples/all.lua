@@ -76,6 +76,12 @@ do -- Capture ^C
 	end
 end
 
+local id = dns.lookup_async ( "github.com" , 80 , e , function (addrinfo,err)
+		assert ( addrinfo , err )
+		print("DNS WORKED: " , dns.addrinfo_to_string ( addrinfo.ai_addr , addrinfo.ai_addrlen ) )
+	end )
+assert(id:wait(),"DNS waiting failed")
+
 while dontquit do
 	e:dispatch ( 16 )
 end

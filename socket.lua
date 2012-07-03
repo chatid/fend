@@ -111,8 +111,15 @@ sock_methods._shutdown = sock_methods.shutdown
 function sock_methods:recv ( buff , len , flags )
 	flags = flags or 0
 	local c = tonumber ( ffi.C.recv ( self:getfd() , buff , len , flags ) )
-	if c == -1 then
-		return nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) )
+	if c == 0 then
+		return nil , "EOF"
+	elseif c == -1 then
+		local err = ffi.errno ( )
+		if err == errors.EAGAIN or err == errors.EWOULDBLOCK then
+			return 0
+		else
+			return nil , ffi.string ( ffi.C.strerror ( err ) )
+		end
 	end
 	return c
 end

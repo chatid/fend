@@ -21,12 +21,23 @@ return function ( e , addrinfo , len )
 				local append = 0
 				local sent = 0
 
-				local read , write
+				local read , write , close
 				function read ( file , cbs )
 					local max = len-(append-sent)
 					if max == 0 then return end -- Buffer full
 
-					local c = assert ( client:recv ( buff+(append%len) , max ) )
+					local c , err = client:recv ( buff+(append%len) , max )
+					if c == nil then
+						if err == "EOF" then
+							cbs.close ( file , cbs )
+							return
+						else
+							error ( err )
+						end
+					end
+
+					if c == 0 then return end
+
 					append = append + c
 					cbs.write = write
 					if c == max then
@@ -47,7 +58,12 @@ return function ( e , addrinfo , len )
 					end
 					e:add_fd ( file , cbs )
 				end
-				e:add_fd ( client:getfile() , { read = read } )
+				function close ( file , cbs )
+					e:del_fd ( file , cbs )
+					client:close ( )
+				end
+
+				e:add_fd ( client:getfile() , { read = read , close = close } )
 			end ;
 		} )
 

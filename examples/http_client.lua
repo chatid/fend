@@ -32,15 +32,6 @@ local function request ( url , e , cb )
 	local bodylen = 0
 	local function onclose ( sock )
 		ret.body = table.concat(ret.body)
-
-		local t = {
-			"Code = " .. ret.code ;
-		}
-		for k , v in pairs ( ret.headers ) do
-			table.insert(t,k.." = " ..v)
-		end
-		table.insert(t,"Body = " .. ret.body)
-		print ( table.concat ( t , "\n" ) )
 		cb ( ret )
 	end
 	function onincoming ( sock , buff , len )
@@ -121,7 +112,6 @@ local function request ( url , e , cb )
 
 	url = urlparse ( url )
 	dns.lookup_async ( url.host , url.scheme or "http" , e , function ( addrinfo )
-			print ( "Connecting to " ,dns.addrinfo_to_string ( addrinfo.ai_addr , addrinfo.ai_addrlen ) )
 
 			local sock = socket.new_tcp ( addrinfo.ai_family )
 			sock:connect ( addrinfo , e , function ( sock , err )

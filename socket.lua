@@ -106,6 +106,7 @@ function sock_methods:shutdown ( )
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 end
+sock_methods._shutdown = sock_methods.shutdown
 
 function sock_methods:recv ( buff , len , flags )
 	flags = flags or 0

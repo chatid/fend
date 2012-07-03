@@ -58,7 +58,8 @@ A non-blocking luasocket-like interface
  	The returned socket will have `O_NONBLOCK` set.  
  	If `with_sockaddr` is true, the call will return a `sockaddr` and length as extra return values
 
- - `sock:shutdown ( )`
+ - `sock:shutdown ( )`  
+ 	Aliased as sock:_shutdown to prevent internal conflicts with the SSL object
 
  - `n_read = sock:recv ( buff , len , flags )`  
 	`buff` should be a user allocated buffer of length `len`.  

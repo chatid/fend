@@ -257,6 +257,7 @@ function ssl_methods:shutdown ( )
 	end
 	return true
 end
+ssl_methods._shutdown = ssl_methods.shutdown
 
 function ssl_methods:close ( )
 	original_socks [ self ]:close ( )

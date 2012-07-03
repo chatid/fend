@@ -85,17 +85,54 @@ local function request ( url , e , cb )
 		local buff = ffi.new("char[?]",len)
 		e:add_fd ( sock:getfile() , {
 				write = function ( file , cbs )
-					assert ( sock:send ( req ) )
-					cbs.write = nil
-					e:add_fd ( file , cbs )
+					local sent , err = sock:send ( req )
+					if sent == nil then
+						if err == "wantread" then
+							-- Wait till readable
+							local old_read , old_write = cbs.read , cbs.write
+							cbs.read , cbs.write = function ( file , cbs )
+								cbs.write = old_write
+								cbs.read = old_read
+								e:add_fd ( file , cbs )
+							end , nil
+							e:add_fd ( file , cbs )
+							return
+						elseif err == "wantwrite" then
+							return
+						else
+							cb ( ret , err )
+							return
+						end
+					elseif sent < #req then
+						req = req:sub ( sent+1 , -1 )
+					else --Successful
+						-- Remove write handler; we're done
+						cbs.write = nil
+						e:add_fd ( file , cbs )
+					end
 				end ;
 				read = function ( file , cbs )
-					local c = assert ( sock:recv ( buff , len ) )
-					if c == 0 then return end
-					local new_buffs , new_len = onincoming ( sock , buff , c )
-					if new_buffs then
-						len = new_len or len
-						buff = ffi.new("char[?]",len)
+					local c , err = sock:recv ( buff , len )
+					if c == nil then
+						if err == "wantread" then
+							return
+						elseif err == "wantwrite" then
+							-- Wait till writable
+							local old_read , old_write = cbs.read , cbs.write
+							cbs.read , cbs.write = nil , function ( file , cbs )
+								cbs.write = old_write
+								cbs.read = old_read
+								e:add_fd ( file , cbs )
+							end
+							e:add_fd ( file , cbs )
+							return
+						elseif err == "EOF" then
+							cbs.close ( file , cbs )
+							return
+						else
+							cb ( ret , err )
+							return
+						end
 					end
 				end ;
 				rdclose = function ( file , cbs )
@@ -111,7 +148,8 @@ local function request ( url , e , cb )
 	end
 
 	url = urlparse ( url )
-	dns.lookup_async ( url.host , url.scheme or "http" , e , function ( addrinfo )
+	dns.lookup_async ( url.host , url.scheme or "http" , e , function ( addrinfo , err )
+			if not addrinfo then cb ( ret , err ) return end
 
 			local sock = socket.new_tcp ( addrinfo.ai_family )
 			sock:connect ( addrinfo , e , function ( sock , err )

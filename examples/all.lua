@@ -29,7 +29,7 @@ e:add_fd ( stdin , {
 	end ;
 } )
 
-require "fend.examples.http_client".request ( "https://mail.google.com/mail/" , e , function ( ret , err )
+require "fend.examples.http_client".request ( "https://mail.google.com/mail/" , {} , e , function ( ret , err )
 		if err then
 			error ( "Error Fetching HTTP Document: " .. err )
 		end

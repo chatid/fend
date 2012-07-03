@@ -24,11 +24,12 @@ local function handshake ( sock , e , cb )
 	end
 end ;
 
-local function request ( url , e , cb )
+local function request ( url , options , e , cb )
 	local ret = { headers = { } , body = { } }
 	local onincoming
 	local state = "new"
 	local saved = ""
+	local lastheader = nil
 	local bodylen = 0
 	local function onclose ( err )
 		ret.body = table.concat(ret.body)
@@ -48,38 +49,87 @@ local function request ( url , e , cb )
 				local line = saved .. str:sub ( from+1 , s-1 )
 
 				if state == "new" then
-					ret.major , ret.minor , ret.code , ret.status = line:match("HTTP/(%d).(%d) (%d+) ?(.*)")
-					if not ret.major then
+					local major , minor , code , reason = line:match("HTTP/(%d+).(%d+) (%d%d%d) (.*)")
+					if not major then
 						onclose ( "Invalid Response: " .. line )
 						return true
 					end
+					ret.major , ret.minor , ret.code , ret.status = tonumber(major) , tonumber(minor) , tonumber(code) , reason
 					state = "headers"
 				elseif #line == 0 then
 					state = "body"
 					from = e
 					break
 				else -- state == "headers"
-					local name , value = line:match ( "([^:]+): (.+)" )
-					if not name then
-						onclose ( "Invalid Header: " .. line )
-						return true
+					local header_cont = line:match("^[ \t]+(.*)")
+					if header_cont then
+						if not lastheader then
+							onclose ( "Header continuation in first line" )
+							return true
+						end
+						ret.headers [ lastheader ] = ret.headers [ lastheader ] .. " " .. header_cont
+					else
+						local name , value = line:match ( "([^:]+):%s*(.+)" )
+						if not name then
+							onclose ( "Invalid Header: " .. line )
+							return true
+						end
+						lastheader = name
+						ret.headers [ name ] = value
 					end
-					ret.headers [ name ] = value
 				end
 				saved = ""
 				from = e
 			end
 			saved = saved .. str:sub ( from+1 )
-			str = saved
+			str = ""
 		end
+
 		if state == "body" then
-			table.insert ( ret.body , str )
-			bodylen = bodylen + #str
-			if bodylen >= tonumber ( ret.headers["Content-Length"] ) then
+			str = saved .. str
+			local transfer_encoding = ret.headers["Transfer-Encoding"]
+			local content_length = tonumber ( ret.headers["Content-Length"] )
+			local content_type = ret.headers["Content-Type"]
+
+			if transfer_encoding and transfer_encoding ~= "identity" then -- Chunked
+				local cursor = 1
+				while true do
+					local s , e , chunk_size , chunk_extension = str:find("(%x+)(.-)\r\n",cursor)
+					if not s then
+						saved = str:sub ( cursor )
+						return false
+					end
+					chunk_size = tonumber ( chunk_size , 16 )
+					if chunk_size == 0 then break end
+					if #str-e-2 < chunk_size then
+						saved = str:sub ( cursor )
+						return false
+					end
+					table.insert ( ret.body , str:sub(e+1,e+chunk_size) )
+					if str:sub(e+1+chunk_size,e+1+chunk_size+1) ~= "\r\n" then
+						onclose ( "Malformed chunked data" )
+						return true
+					end
+					cursor = e+1+chunk_size+2
+				end
 				state = "done"
-				onclose ( nil )
+			elseif content_length then
+				table.insert ( ret.body , str )
+				bodylen = bodylen + #str
+				if bodylen >= content_length then
+					state = "done"
+				end
+			elseif content_type and content_type:match("^multipart/byteranges") then
+				onclose ( "Byte ranges unsupported" )
+				return true
+			else
+				onclose ( "Unknown message length" )
 				return true
 			end
+		end
+		if state == "done" then
+			onclose ( nil )
+			return true
 		end
 		return false
 	end
@@ -87,11 +137,32 @@ local function request ( url , e , cb )
 	local function onconnect ( sock , err)
 		if not sock then error ( "Connection failed: " .. err ) end
 
-		local req = table.concat ( {
-			"GET " .. ( url.path or "/" ) .. " HTTP/1.0" ;
-			"Host: " .. url.host ;
-			"\r\n" ;
-		} , "\r\n" )
+		local headers = {
+			Host = url.host ;
+			["User-Agent"] = "fend" ;
+		}
+		-- Copy headers from requester
+		if options.headers then
+			for name , value in pairs ( options.headers ) do
+				headers [ name ] = value
+			end
+		end
+		local path = url.path or "/"
+		if url.query then
+			path = path .. "?" .. url.query
+		end
+		local req , n = {
+			string.format ( "%s %s HTTP/%d.%d\r\n" , options.method or "GET" , path , 1 , 1 ) ;
+		} , 2
+		for name , value in pairs ( headers ) do
+			req [ n ] = name
+			req [ n+1 ] = ": "
+			req [ n+2 ] = value
+			req [ n+3 ] = "\r\n"
+			n = n + 4
+		end
+		req [ n ] = "\r\n"
+		req = table.concat ( req )
 
 		local len = 2^20
 		local buff = ffi.new("char[?]",len)
@@ -159,7 +230,7 @@ local function request ( url , e , cb )
 	end
 
 	url = urlparse ( url )
-	dns.lookup_async ( url.host , url.scheme or "http" , e , function ( addrinfo , err )
+	dns.lookup_async ( url.host , url.port or url.scheme or "http" , e , function ( addrinfo , err )
 			if not addrinfo then onclose ( err ) return end
 
 			local sock = socket.new_tcp ( addrinfo.ai_family )

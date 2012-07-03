@@ -211,7 +211,7 @@ local function handle_err ( err , c )
 	elseif err == ssl_defs.SSL_ERROR_SYSCALL then
 		local ssl_err = geterr()
 		if ssl_err then
-			return ssl_err
+			return nil , ssl_err
 		elseif c == 0 then
 			return nil , "EOF"
 		elseif c == -1 then

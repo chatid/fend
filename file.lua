@@ -59,5 +59,5 @@ return function ( fd )
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
 	end
-	return new ( { fd , is_luafile == "closed file" } ) -- COMPAT: Wrap in table for luaffi
+	return new ( { fd = fd , no_close = (is_luafile == "closed file") } ) -- COMPAT: Wrap in table for luaffi
 end

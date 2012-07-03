@@ -97,7 +97,7 @@ function epoll_methods:add_fd ( file , cbs )
 		cbs.read and ffi.C.EPOLLIN or 0 ,
 		cbs.write and ffi.C.EPOLLOUT or 0 ,
 		cbs.oneshot and ffi.C.EPOLLONESHOT or 0 ,
-		ffi.C.EPOLLRDHUP )
+		cbs.rdclose and ffi.C.EPOLLRDHUP or 0 )
 	__events[0].data.fd = fd
 
 	if ffi.C.epoll_ctl ( self.epfile:getfd() , op , fd , __events ) ~= 0 then
@@ -149,6 +149,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 		local fd = self.wait_events[i].data.fd
 		local file = self.raw_fd_map [ fd ]
 		local cbs = self.registered [ file ]
+		--print(string.format("EVENT on %s: %s", tostring(file), event_string(events)))
 		if cbs.oneshot then
 			if ffi.C.epoll_ctl ( self.epfile:getfd() , epoll_lib.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
 				self.locked = false

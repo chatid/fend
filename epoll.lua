@@ -8,6 +8,7 @@ local new_file = require "fend.file"
 require "fend.common"
 include "stdio"
 include "strings"
+local errors = include "errno"
 include "sys/signalfd"
 include "sys/timerfd"
 local time = include "time"
@@ -15,13 +16,18 @@ local epoll_lib = include "sys/epoll"
 
 local sigfiles_to_epoll_obs = setmetatable ( { } , { __mode = "kv" } )
 local signal_cb_table = {
-	read = function ( file )
+	read = function ( file , cbs )
 		local self = sigfiles_to_epoll_obs [ file ]
 
 		local info = ffi.new ( "struct signalfd_siginfo[1]" )
 		local r = tonumber ( ffi.C.read ( file:getfd() , info , ffi.sizeof ( info ) ) )
 		if r == -1 then
-			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+			local err = ffi.errno ( )
+			if err == errors.EAGAIN then
+				return
+			else
+				error ( ffi.string ( ffi.C.strerror ( err ) ) )
+			end
 		end
 		assert ( r == ffi.sizeof ( info ) )
 
@@ -29,7 +35,10 @@ local signal_cb_table = {
 		for id , cb in pairs ( self.sigcbs [ signum ] ) do
 			cb ( info , id )
 		end
-	end
+
+		return cbs.read ( file , cbs ) -- Call self until EAGAIN
+	end ;
+	edge = true ;
 }
 local epoll_methods = { }
 local epoll_mt = {
@@ -51,7 +60,7 @@ local function new_epoll ( guesstimate )
 	if ffi.C.sigemptyset ( mask ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	local sigfd = ffi.C.signalfd ( -1 , mask , 0 )
+	local sigfd = ffi.C.signalfd ( -1 , mask , ffi.C.SFD_NONBLOCK )
 	if sigfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
@@ -261,6 +270,7 @@ local timer_cbs = {
 			timer:set ( start , interval )
 		end
 	end ;
+	edge = true ;
 }
 local timer_mt = {
 	__index = {

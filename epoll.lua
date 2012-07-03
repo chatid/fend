@@ -122,6 +122,17 @@ function epoll_methods:remove_lock ( )
 	self.locked = false
 end
 
+local function event_string(events)
+	local t = {}
+	local function ap ( v ) if v then t[#t+1] = v end end
+	ap(bit.band ( events , ffi.C.EPOLLIN ) ~= 0 and "R")
+	ap(bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 and "W")
+	ap(bit.band ( events , ffi.C.EPOLLERR ) ~= 0 and "E")
+	ap(bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 and "C")
+	ap(bit.band ( events , ffi.C.EPOLLRDHUP ) ~= 0 and "D")
+	return table.concat(t,",")
+end
+
 --- Wait for a number of events and call their callbacks.
 -- Raising an error in a callback will propagate through, leaving the dispatch operation locked.
 -- max_events (optional) is the number of events to wait for. Defaults to 1.

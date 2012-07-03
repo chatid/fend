@@ -30,12 +30,13 @@ local function request ( url , e , cb )
 	local state = "new"
 	local saved = ""
 	local bodylen = 0
-	local function onclose ( sock )
-		if state ~= "done" then
-			cb ( ret , "incomplete" )
-		end
+	local function onclose ( err )
 		ret.body = table.concat(ret.body)
-		cb ( ret )
+		if state == "done" then
+			cb ( ret )
+		else
+			cb ( ret , err or "incomplete" )
+		end
 	end
 	function onincoming ( sock , buff , len )
 		local str = ffi.string ( buff , len )
@@ -45,17 +46,24 @@ local function request ( url , e , cb )
 				local s , e = str:find ( "\r\n" , from+1 )
 				if not s then break end
 				local line = saved .. str:sub ( from+1 , s-1 )
-				if #line == 0 then
+
+				if state == "new" then
+					ret.major , ret.minor , ret.code , ret.status = line:match("HTTP/(%d).(%d) (%d+) ?(.*)")
+					if not ret.major then
+						onclose ( "Invalid Response: " .. line )
+						return true
+					end
+					state = "headers"
+				elseif #line == 0 then
 					state = "body"
 					from = e
 					break
-				end
-				if state == "new" then
-					ret.major , ret.minor , ret.code , ret.status = line:match("HTTP/(%d).(%d) (%d+) ?(.*)")
-					state = "headers"
-				elseif state == "headers" then
+				else -- state == "headers"
 					local name , value = line:match ( "([^:]+): (.+)" )
-					if not name then cb ( nil , "Invalid Header" ) end
+					if not name then
+						onclose ( "Invalid Header: " .. line )
+						return true
+					end
 					ret.headers [ name ] = value
 				end
 				saved = ""
@@ -69,6 +77,7 @@ local function request ( url , e , cb )
 			bodylen = bodylen + #str
 			if bodylen >= tonumber ( ret.headers["Content-Length"] ) then
 				state = "done"
+				onclose ( nil )
 				return true
 			end
 		end
@@ -103,7 +112,7 @@ local function request ( url , e , cb )
 						elseif err == "wantwrite" then
 							return
 						else
-							cb ( ret , err )
+							onclose ( err )
 							return
 						end
 					elseif sent < #req then
@@ -129,22 +138,21 @@ local function request ( url , e , cb )
 							end
 							e:add_fd ( file , cbs )
 							return
-						elseif err == "EOF" then
-							cbs.close ( file , cbs )
-							return
 						else
-							cb ( ret , err )
+							onclose ( err )
+							e:del_fd ( file , cbs )
+							sock:close ( )
 							return
 						end
 					end
-					local finished = onincoming ( sock , buff , c )
-					if finished then
-						cbs.close ( file , cbs )
+					if onincoming ( sock , buff , c ) then
+						e:del_fd ( file , cbs )
+						sock:close ( )
 					end
 				end ;
 				close = function ( file , cbs )
+					onclose ( "HUP" )
 					e:del_fd ( file , cbs )
-					onclose ( sock )
 					sock:close ( )
 				end ;
 			} )
@@ -152,7 +160,7 @@ local function request ( url , e , cb )
 
 	url = urlparse ( url )
 	dns.lookup_async ( url.host , url.scheme or "http" , e , function ( addrinfo , err )
-			if not addrinfo then cb ( ret , err ) return end
+			if not addrinfo then onclose ( err ) return end
 
 			local sock = socket.new_tcp ( addrinfo.ai_family )
 			sock:connect ( addrinfo , e , function ( sock , err )

@@ -29,7 +29,20 @@ e:add_fd ( stdin , {
 	end ;
 } )
 
-require "fend.examples.http_client".request ( "https://mail.google.com/mail/" , e , function ( b ) print(b) end )
+require "fend.examples.http_client".request ( "https://mail.google.com/mail/" , e , function ( ret , err )
+		if err then
+			error ( "Error Fetching HTTP Document: " .. err )
+		end
+
+		local t = {
+			"Code = " .. ret.code ;
+		}
+		for k , v in pairs ( ret.headers ) do
+			table.insert(t,k.." = " ..v)
+		end
+		table.insert(t,"Body = " .. ret.body)
+		print ( table.concat ( t , "\n" ) )
+	end )
 
 local t1 = e:add_timer ( 1 , 1 , function ( timer , n )
 		print("timer1")

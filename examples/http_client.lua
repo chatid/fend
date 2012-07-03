@@ -119,6 +119,7 @@ local function request ( url , options , e , cb )
 				if bodylen >= content_length then
 					state = "done"
 				end
+				saved = ""
 			elseif content_type and content_type:match("^multipart/byteranges") then
 				onclose ( "Byte ranges unsupported" )
 				return true

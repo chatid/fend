@@ -69,7 +69,7 @@ local function request ( url , e , cb )
 			bodylen = bodylen + #str
 			if bodylen >= tonumber ( ret.headers["Content-Length"] ) then
 				state = "done"
-				sock:close ( )
+				return true
 			end
 		end
 		return false
@@ -137,15 +137,15 @@ local function request ( url , e , cb )
 							return
 						end
 					end
-				end ;
-				rdclose = function ( file , cbs )
-					e:del_fd ( file , cbs )
-					cbs.read ( file , cbs )
-					onclose ( sock )
+					local finished = onincoming ( sock , buff , c )
+					if finished then
+						cbs.close ( file , cbs )
+					end
 				end ;
 				close = function ( file , cbs )
 					e:del_fd ( file , cbs )
 					onclose ( sock )
+					sock:close ( )
 				end ;
 			} )
 	end

@@ -96,8 +96,9 @@ function epoll_methods:add_fd ( file , cbs )
 	__events[0].events = bit.bor (
 		cbs.read and ffi.C.EPOLLIN or 0 ,
 		cbs.write and ffi.C.EPOLLOUT or 0 ,
+		cbs.rdclose and ffi.C.EPOLLRDHUP or 0,
 		cbs.oneshot and ffi.C.EPOLLONESHOT or 0 ,
-		cbs.rdclose and ffi.C.EPOLLRDHUP or 0 )
+		cbs.edge and ffi.C.EPOLLET or 0 )
 	__events[0].data.fd = fd
 
 	if ffi.C.epoll_ctl ( self.epfile:getfd() , op , fd , __events ) ~= 0 then

@@ -31,6 +31,9 @@ local function request ( url , e , cb )
 	local saved = ""
 	local bodylen = 0
 	local function onclose ( sock )
+		if state ~= "done" then
+			cb ( ret , "incomplete" )
+		end
 		ret.body = table.concat(ret.body)
 		cb ( ret )
 	end

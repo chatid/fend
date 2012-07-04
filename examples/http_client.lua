@@ -136,7 +136,7 @@ local function request ( url , options , e , cb )
 	end
 
 	local function onconnect ( sock , err)
-		if not sock then error ( "Connection failed: " .. err ) end
+		if not sock then onclose ( "Connection failed: " .. err ) return end
 
 		local headers = {
 			Host = url.host ;

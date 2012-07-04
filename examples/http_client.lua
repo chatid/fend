@@ -1,3 +1,9 @@
+local tonumber = tonumber
+local pairs = pairs
+local tconcat = table.concat
+local tinsert = table.insert
+local strformat = string.format
+
 local ffi = require "ffi"
 local dns = require "fend.dns"
 local socket = require "fend.socket"
@@ -26,20 +32,19 @@ end ;
 
 local function request ( url , options , e , cb )
 	local ret = { headers = { } , body = { } }
-	local onincoming
 	local state = "new"
 	local saved = ""
 	local lastheader = nil
 	local bodylen = 0
 	local function onclose ( err )
-		ret.body = table.concat(ret.body)
+		ret.body = tconcat(ret.body)
 		if state == "done" then
 			cb ( ret )
 		else
 			cb ( ret , err or "incomplete" )
 		end
 	end
-	function onincoming ( sock , buff , len )
+	local function onincoming ( sock , buff , len )
 		local str = ffi.string ( buff , len )
 		if state == "new" or state == "headers" then
 			local from = 0
@@ -105,7 +110,7 @@ local function request ( url , options , e , cb )
 						saved = str:sub ( cursor )
 						return false
 					end
-					table.insert ( ret.body , str:sub(e+1,e+chunk_size) )
+					tinsert ( ret.body , str:sub(e+1,e+chunk_size) )
 					if str:sub(e+1+chunk_size,e+1+chunk_size+1) ~= "\r\n" then
 						onclose ( "Malformed chunked data" )
 						return true
@@ -114,7 +119,7 @@ local function request ( url , options , e , cb )
 				end
 				state = "done"
 			elseif content_length then
-				table.insert ( ret.body , str )
+				tinsert ( ret.body , str )
 				bodylen = bodylen + #str
 				if bodylen >= content_length then
 					state = "done"
@@ -153,7 +158,7 @@ local function request ( url , options , e , cb )
 			path = path .. "?" .. url.query
 		end
 		local req , n = {
-			string.format ( "%s %s HTTP/%d.%d\r\n" , options.method or "GET" , path , 1 , 1 ) ;
+			strformat ( "%s %s HTTP/%d.%d\r\n" , options.method or "GET" , path , 1 , 1 ) ;
 		} , 2
 		for name , value in pairs ( headers ) do
 			req [ n ] = name
@@ -163,7 +168,7 @@ local function request ( url , options , e , cb )
 			n = n + 4
 		end
 		req [ n ] = "\r\n"
-		req = table.concat ( req )
+		req = tconcat ( req )
 
 		local len = 2^20
 		local buff = ffi.new("char[?]",len)

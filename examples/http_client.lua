@@ -9,6 +9,7 @@ local dns = require "fend.dns"
 local socket = require "fend.socket"
 local ssl = require "fend.ssl"
 local urlparse = require "socket.url".parse
+local buff_tools = require "fend.buff_tools"
 
 -- Call to handshake an ssl connection
 local function handshake ( sock , e , cb )
@@ -45,13 +46,12 @@ local function request ( url , options , e , cb )
 		end
 	end
 	local function onincoming ( sock , buff , len )
-		local str = ffi.string ( buff , len )
 		if state == "new" or state == "headers" then
 			local from = 0
 			while true do
-				local s , e = str:find ( "\r\n" , from+1 )
+				local s , e = buff_tools.find ( buff+from , len-from , buff_tools.new"\r\n" )
 				if not s then break end
-				local line = saved .. str:sub ( from+1 , s-1 )
+				local line = saved .. ffi.string ( buff+from , s )
 
 				if state == "new" then
 					local major , minor , code , reason = line:match("HTTP/(%d+).(%d+) (%d%d%d) (.*)")
@@ -63,7 +63,7 @@ local function request ( url , options , e , cb )
 					state = "headers"
 				elseif #line == 0 then
 					state = "body"
-					from = e
+					from = from+e+1
 					break
 				else -- state == "headers"
 					local header_cont = line:match("^[ \t]+(.*)")
@@ -84,14 +84,15 @@ local function request ( url , options , e , cb )
 					end
 				end
 				saved = ""
-				from = e
+				from = from+e+1
 			end
-			saved = saved .. str:sub ( from+1 )
-			str = ""
+			saved = saved .. ffi.string ( buff+from , len-from )
+			buff = ffi.NULL
+			len = 0
 		end
 
 		if state == "body" then
-			str = saved .. str
+			local str = saved .. ffi.string ( buff , len )
 			local transfer_encoding = ret.headers["Transfer-Encoding"]
 			local content_length = tonumber ( ret.headers["Content-Length"] )
 			local content_type = ret.headers["Content-Type"]

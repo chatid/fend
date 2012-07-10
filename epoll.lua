@@ -245,6 +245,7 @@ function epoll_methods:del_signal ( signum , id )
 	local cbs = self.sigcbs [ signum ]
 	cbs [ id ] = nil
 	if next ( cbs ) == nil then -- No callbacks left for this signal; remove it from the watched set
+		self.sigcbs [ signum ] = nil
 		if ffi.C.sigdelset ( self.sigmask , signum ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end

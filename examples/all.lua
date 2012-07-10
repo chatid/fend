@@ -1,16 +1,24 @@
+local dispatcher = arg[1] or "epoll"
+if dispatcher == "epoll" then
+	dispatcher = require "fend.poll"
+elseif dispatcher == "poll" then
+	dispatcher = require "fend.epoll"
+else
+	error ( "Unknown backend" )
+end
+
 local ffi = require "ffi"
 require "fend.common"
 include "stdio"
 include "unistd"
 include "strings" -- For strerror
 local new_file = require "fend.file"
-local epoll = require "fend.epoll"
 local dns = require "fend.dns"
 local socket = require "fend.socket"
 
 local dontquit = true
 
-local e = epoll()
+local e = dispatcher()
 
 local stdin = new_file ( io.stdin )
 e:add_fd ( stdin , {

@@ -3,9 +3,11 @@ fend (Fast EveNt Dispatch)
 
 fend is an event framework utilising LuaJIT's ffi.
 
-It currently only has an epoll based dispatcher; so use is limited to linux based devices.
+It currently has `poll` and `epoll` based dispatchers.
 
-Most functions can raise errors.
+The processed C headers in `include/` are from a linux x64 system; they may not be suitable for you.
+
+Note: Most functions can raise errors.
 
 Installation
 ------------
@@ -85,8 +87,8 @@ Provides dns and host based utilities.
  - `dns.lookup ( hostname , port )`  
  	Completes a blocking lookup, returning an `addrinfo` structure
 
- - `dns.lookup_async ( hostname , port , epoll_ob , callback )`  
- 	Does a non-blocking dns lookup, and when ready (dispatched via the `epoll_ob`).  
+ - `dns.lookup_async ( hostname , port , dispatcher , callback )`  
+ 	Does a non-blocking dns lookup, and when ready.  
  	Will call callback `cb` with an `addrinfo` structure.  
  	Returns an object with methods:  
 		`wait`: blocks until the lookup is completed (or until `timeout`). returns boolean indicating success/failure
@@ -95,13 +97,14 @@ Provides dns and host based utilities.
 Examples
 --------
 
- - `examples/all.lua`  
- 	is a demonstration of every module working together
+ - `examples/all.lua [dispatcher]`  
+ 	is a demonstration of every module working together  
+ 	`dispatcher` can be either `poll` or `epoll`
 
  - `examples/http_client.lua`  
  	is a basic http client  
  	the module returns a table with functions:  
- 		`request ( url , epoll_ob , callback )`
+ 		`request ( url , options , dispatcher , callback )`
 
 
 Extra Information

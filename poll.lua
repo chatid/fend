@@ -3,6 +3,7 @@ local bit = require "bit"
 local signalfd = require "fend.signalfd"
 local timerfd = require "fend.timerfd"
 require "fend.common"
+include "stdlib"
 include "strings"
 local poll = include "poll"
 

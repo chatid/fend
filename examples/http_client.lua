@@ -32,11 +32,13 @@ local function handshake ( sock , e , cb )
 		e:add_fd ( sock:getfile() , {
 				read = function ( file , cbs ) return handshake ( sock , e , cb ) end ;
 				oneshot = true ;
+				edge = true ;
 			} )
 	elseif err == "wantwrite" then
 		e:add_fd ( sock:getfile() , {
 				write = function ( file , cbs ) return handshake ( sock , e , cb ) end ;
 				oneshot = true ;
+				edge = true ;
 			} )
 	else
 		cb ( nil , err )
@@ -245,6 +247,7 @@ local function request ( url , options , e , cb )
 					e:del_fd ( file , cbs )
 					sock:close ( )
 				end ;
+				edge = true ;
 			} )
 	end
 

@@ -186,35 +186,47 @@ extern int gai_cancel (struct gaicb *__gaicbp) __attribute__ ((__nothrow__ , __l
 
 module ( ... )
 
-GAI_WAIT = 0
+GAI_WAIT   = 0
 GAI_NOWAIT = 1
 
-EAI_BADFLAGS = -1 -- Invalid value for `ai_flags' field.
-EAI_NONAME = -2 -- NAME or SERVICE is unknown.
-EAI_AGAIN = -3 -- Temporary failure in name resolution.
-EAI_FAIL = -4 -- Non-recoverable failure in name res.
-EAI_FAMILY = -6 -- `ai_family' not supported.
-EAI_SOCKTYPE = -7 -- `ai_socktype' not supported.
-EAI_SERVICE = -8 -- SERVICE not supported for `ai_socktype'.
-EAI_MEMORY = -10 -- Memory allocation failure.
-EAI_SYSTEM = -11 -- System error returned in `errno'.
-EAI_OVERFLOW = -12 -- Argument buffer overflow.
-EAI_NODATA = -5 -- No address associated with NAME.
-EAI_ADDRFAMILY = -9 -- Address family for NAME not supported.
-EAI_INPROGRESS = -100 -- Processing request in progress.
-EAI_CANCELED = -101 -- Request canceled.
+AI_PASSIVE                  = 0x0001 -- Socket address is intended for `bind'.
+AI_CANONNAME                = 0x0002 -- Request for canonical name.
+AI_NUMERICHOST              = 0x0004 -- Don't use name resolution.
+AI_V4MAPPED                 = 0x0008 -- IPv4 mapped addresses are acceptable.
+AI_ALL                      = 0x0010 -- Return IPv4 mapped and IPv6 addresses.
+AI_ADDRCONFIG               = 0x0020 -- Use configuration of this host to choose returned address type..
+AI_IDN                      = 0x0040 -- IDN encode input (assuming it is encoded in the current locale's character set) before looking it up.
+AI_CANONIDN                 = 0x0080 -- Translate canonical name from IDN format.
+AI_IDN_ALLOW_UNASSIGNED     = 0x0100 -- Don't reject unassigned Unicode code points.
+AI_IDN_USE_STD3_ASCII_RULES = 0x0200 -- Validate strings according to STD3 rules.
+AI_NUMERICSERV              = 0x0400 -- Don't use name resolution.
+
+EAI_BADFLAGS    = -1 -- Invalid value for `ai_flags' field.
+EAI_NONAME      = -2 -- NAME or SERVICE is unknown.
+EAI_AGAIN       = -3 -- Temporary failure in name resolution.
+EAI_FAIL        = -4 -- Non-recoverable failure in name res.
+EAI_FAMILY      = -6 -- `ai_family' not supported.
+EAI_SOCKTYPE    = -7 -- `ai_socktype' not supported.
+EAI_SERVICE     = -8 -- SERVICE not supported for `ai_socktype'.
+EAI_MEMORY      = -10 -- Memory allocation failure.
+EAI_SYSTEM      = -11 -- System error returned in `errno'.
+EAI_OVERFLOW    = -12 -- Argument buffer overflow.
+EAI_NODATA      = -5 -- No address associated with NAME.
+EAI_ADDRFAMILY  = -9 -- Address family for NAME not supported.
+EAI_INPROGRESS  = -100 -- Processing request in progress.
+EAI_CANCELED    = -101 -- Request canceled.
 EAI_NOTCANCELED = -102 -- Request not canceled.
-EAI_ALLDONE = -103 -- All requests done.
-EAI_INTR = -104 -- Interrupted by a signal.
-EAI_IDN_ENCODE = -105 -- IDN encoding failed.
+EAI_ALLDONE     = -103 -- All requests done.
+EAI_INTR        = -104 -- Interrupted by a signal.
+EAI_IDN_ENCODE  = -105 -- IDN encoding failed.
 
 NI_MAXSERV = 32
 NI_MAXHOST = 1025
 
 NI_NUMERICHOST = 1
 NI_NUMERICSERV = 2
-NI_NOFQDN = 4
-NI_NAMEREQD = 8
-NI_DGRAM = 16
+NI_NOFQDN      = 4
+NI_NAMEREQD    = 8
+NI_DGRAM       = 16
 
 return _M

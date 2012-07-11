@@ -62,15 +62,17 @@ local function lookup_async ( hostname , port , epoll_ob , cb )
 	sigevent.sigev_value.sival_ptr = list
 
 	local cb_id = epoll_ob:add_signal ( signum , function ( sig_info , cb_id )
-			local retlist = ffi.cast ( "struct gaicb*" , sig_info[0].ssi_ptr )
-			if retlist == list then
-				local err = anl.gai_error ( retlist+0 )
-				if err == 0 then
-					cb ( retlist[0].ar_result )
-				else
-					cb ( nil , ffi.string ( anl.gai_strerror ( err ) ) )
+			if sig_info[0].ssi_code == ffi.C.SI_ASYNCNL then
+				local retlist = ffi.cast ( "struct gaicb*" , sig_info[0].ssi_ptr )
+				if retlist == list then
+					local err = anl.gai_error ( retlist+0 )
+					if err == 0 then
+						cb ( retlist[0].ar_result )
+					else
+						cb ( nil , ffi.string ( anl.gai_strerror ( err ) ) )
+					end
+					epoll_ob:del_signal ( signum , cb_id )
 				end
-				epoll_ob:del_signal ( signum , cb_id )
 			end
 		end )
 

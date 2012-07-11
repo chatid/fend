@@ -1,3 +1,6 @@
+local next = next
+local pairs = pairs
+
 local ffi = require "ffi"
 local new_file = require "fend.file"
 require "fend.common"

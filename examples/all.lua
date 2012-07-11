@@ -104,5 +104,6 @@ local id = dns.lookup_async ( "github.com" , 80 , e , function (addrinfo,err)
 assert(id:wait(),"DNS waiting failed")
 
 while dontquit do
-	e:dispatch ( 16 )
+	e:dispatch ( 1 )
+	collectgarbage ( )
 end

@@ -237,8 +237,8 @@ local function request ( url , options , e , cb )
 	end
 
 	url = urlparse ( url )
-	dns.lookup_async ( url.host , url.port or url.scheme or "http" , e , function ( addrinfo , err )
 			if not addrinfo then onclose ( err ) return end
+	dns.lookup_async ( url.host , url.port or url.scheme or "http" , nil , e , function ( addrinfo , err )
 
 			local sock = socket.new_tcp ( addrinfo.ai_family )
 			sock:connect ( addrinfo , e , function ( sock , err )

@@ -84,10 +84,11 @@ Provides a luasec-like interface (even supporting the same context types)
 ### DNS
 Provides dns and host based utilities.
 
- - `dns.lookup ( hostname , port )`  
+ - `dns.lookup ( hostname , port , hints )`  
  	Completes a blocking lookup, returning an `addrinfo` structure
+ 	hints can be `NULL` or an `addrinfo` structure
 
- - `dns.lookup_async ( hostname , port , dispatcher , callback )`  
+ - `dns.lookup_async ( hostname , port , hints , dispatcher , callback )`  
  	Does a non-blocking dns lookup, and when ready.  
  	Will call callback `cb` with an `addrinfo` structure.  
  	Returns an object with methods:  

@@ -21,13 +21,13 @@ local function addrinfo_to_string ( sockaddr , addr_len )
 	return ffi.string ( host ) , ffi.string ( serv )
 end
 
-local function lookup ( hostname , port )
+local function lookup ( hostname , port , hints )
 	local service
 	if port then
 		service = tostring ( port )
 	end
 	local res = ffi.new ( "struct addrinfo*[1]" )
-	local err = ffi.C.getaddrinfo ( hostname , service , nil , res )
+	local err = ffi.C.getaddrinfo ( hostname , service , hints , res )
 	if err ~= 0 then
 		error ( ffi.string ( ffi.C.gai_strerror ( err ) ) )
 	end
@@ -48,10 +48,11 @@ end
 -- `cb` is called when done, gets argument of an `addrinfo`, or `nil , err` on failure
 -- returns a table with methods:
 --	`wait`: blocks until the lookup is completed (or until `timeout`). returns boolean indicating success/failure
-local function lookup_async ( hostname , port , epoll_ob , cb )
+local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 	local items = 1
 	local list = ffi.new ( "struct gaicb[?]" , items )
 	list[0].ar_name = hostname
+	list[0].ar_request = hints
 	if port then
 		list[0].ar_service = tostring ( port )
 	end

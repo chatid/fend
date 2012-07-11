@@ -1,4 +1,7 @@
 local setmetatable = setmetatable
+local tonumber = tonumber
+local floor = math.floor
+
 local ffi = require "ffi"
 local bit = require "bit"
 local new_file = require "fend.file"
@@ -31,9 +34,9 @@ local timer_mt = {
 		set = function ( timer , value , interval , flags )
 			flags = flags or 0
 			interval = interval or 0
-			timerspec[0].it_interval.tv_sec = math.floor ( interval )
+			timerspec[0].it_interval.tv_sec = floor ( interval )
 			timerspec[0].it_interval.tv_nsec = ( interval % 1 )*1e9
-			timerspec[0].it_value.tv_sec = math.floor ( value )
+			timerspec[0].it_value.tv_sec = floor ( value )
 			timerspec[0].it_value.tv_nsec = ( value % 1 )*1e9
 			if ffi.C.timerfd_settime ( timer.file:getfd() , flags , timerspec , nil ) == -1 then
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )

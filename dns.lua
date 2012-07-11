@@ -8,7 +8,7 @@ local signal = include "signal"
 include "strings"
 include "arpa.inet"
 
-local function addrinfo_to_string ( sockaddr , addr_len )
+local function sockaddr_to_string ( sockaddr , addr_len )
 	local host_len = netdb.NI_MAXHOST or 1025
 	local host = ffi.new ( "char[?]" , host_len )
 	local serv_len = netdb.NI_MAXSERV or 32
@@ -110,7 +110,7 @@ local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 end
 
 return {
-	addrinfo_to_string = addrinfo_to_string ;
+	sockaddr_to_string = sockaddr_to_string ;
 	lookup = lookup ;
 	lookup_async = lookup_async ;
 }

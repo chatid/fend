@@ -99,7 +99,7 @@ end
 
 local id = dns.lookup_async ( "github.com" , 80 , nil , e , function (addrinfo,err)
 		assert ( addrinfo , err )
-		print("DNS WORKED: " , dns.addrinfo_to_string ( addrinfo.ai_addr , addrinfo.ai_addrlen ) )
+		print("DNS WORKED: " , dns.sockaddr_to_string ( addrinfo.ai_addr , addrinfo.ai_addrlen ) )
 	end )
 assert(id:wait(),"DNS waiting failed")
 

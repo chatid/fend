@@ -15,7 +15,7 @@ return function ( e , addrinfo , len )
 	e:add_fd ( serv:getfile() , {
 			read = function ( file )
 				local client , sockaddr , sockaddr_len = serv:accept ( true )
-				print("CLIENT CONNECTED",dns.addrinfo_to_string ( sockaddr , sockaddr_len ))
+				print("ECHO CLIENT CONNECTED",dns.sockaddr_to_string ( sockaddr , sockaddr_len ))
 				local buff = ffi.new("char[?]",len)
 
 				local append = 0

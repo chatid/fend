@@ -14,7 +14,8 @@ local function addrinfo_to_string ( sockaddr , addr_len )
 	local serv_len = netdb.NI_MAXSERV or 32
 	local serv = ffi.new ( "char[?]" , serv_len )
 	local flags = bit.bor ( netdb.NI_NUMERICHOST , netdb.NI_NUMERICSERV )
-	if ffi.C.getnameinfo ( sockaddr , addr_len , host , host_len , serv , serv_len , flags ) ~= 0 then
+	local err = ffi.C.getnameinfo ( sockaddr , addr_len , host , host_len , serv , serv_len , flags )
+	if err ~= 0 then
 		error ( ffi.string ( ffi.C.gai_strerror ( err ) ) )
 	end
 	return ffi.string ( host ) , ffi.string ( serv )

@@ -115,12 +115,12 @@ function poll_methods:add_fd ( file , cbs )
 			self.fds = expand_pollfds ( self.fds , newsize )
 			self.allocated = newsize
 		end
-		self.nfds = self.nfds + 1
 		info = {
 			index = self.nfds ;
 			file = file ;
 			cbs = cbs ;
 		}
+		self.nfds = self.nfds + 1
 		self.map [ fd ] = info
 	end
 	local pollfd = self.fds [ info.index ]
@@ -136,13 +136,12 @@ function poll_methods:del_fd ( file )
 
 	local index = assert ( self.map [ fd ] , "File not watched" ).index
 	self.map [ fd ] = nil
-	self.fds [ index ].events = 0
 	self.nfds = self.nfds - 1
-
 	if index ~= self.nfds then -- If not last item, move an item from end of list to fill the empty spot
-		self.fds [ index ].fd , self.fds [ index ].events = self.fds [ self.nfds ].fd , self.fds [ self.nfds ].events
-		self.fds [ self.nfds ].events = 0 -- Mark old as invalid
-		self.map [ self.fds [ index ].fd ].index = index
+		local lastfd , lastevent = self.fds [ self.nfds ].fd , self.fds [ self.nfds ].events
+		local lastinfo = self.map [ lastfd ]
+		self.fds [ index ].fd , self.fds [ index ].events = lastfd , lastevent
+		lastinfo.index = index
 	end
 end
 

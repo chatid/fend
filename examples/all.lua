@@ -1,8 +1,8 @@
 local dispatcher = arg[1] or "epoll"
 if dispatcher == "epoll" then
-	dispatcher = require "fend.poll"
-elseif dispatcher == "poll" then
 	dispatcher = require "fend.epoll"
+elseif dispatcher == "poll" then
+	dispatcher = require "fend.poll"
 else
 	error ( "Unknown backend" )
 end

@@ -50,14 +50,17 @@ function sock_methods:connect ( addrinfo , epoll_ob , cb )
 			cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
 		end
 	end
-	epoll_ob:add_fd ( self.file , { write = function ( file )
-			local err = getsockerr ( file )
-			if err ~= 0 then
-				cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
-			end
-			self.connected = true
-			cb ( self )
-		end , oneshot = true } )
+	epoll_ob:add_fd ( self.file , {
+			write = function ( file )
+				local err = getsockerr ( file )
+				if err ~= 0 then
+					cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
+				end
+				self.connected = true
+				cb ( self )
+			end ;
+			oneshot = true
+		} )
 end
 
 function sock_methods:set_option ( option , val )

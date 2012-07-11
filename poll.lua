@@ -115,10 +115,9 @@ function poll_methods:add_fd ( file , cbs )
 			self.fds = expand_pollfds ( self.fds , newsize )
 			self.allocated = newsize
 		end
-		index = self.nfds
 		self.nfds = self.nfds + 1
 		info = {
-			index = index ;
+			index = self.nfds ;
 			file = file ;
 			cbs = cbs ;
 		}

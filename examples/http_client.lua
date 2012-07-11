@@ -5,11 +5,23 @@ local tinsert = table.insert
 local strformat = string.format
 
 local ffi = require "ffi"
+local bit = require "bit"
 local dns = require "fend.dns"
 local socket = require "fend.socket"
 local ssl = require "fend.ssl"
 local urlparse = require "socket.url".parse
 local buff_tools = require "fend.buff_tools"
+require "fend.common"
+local netdb = include "netdb"
+include "sys/socket"
+local netinet_in = include "netinet/in"
+
+local hints = ffi.new ( "const struct addrinfo[1]" , { {
+	ai_flags    = bit.bor ( netdb.AI_PASSIVE , netdb.AI_V4MAPPED , netdb.AI_ADDRCONFIG ) ;
+	ai_family   = netinet_in.AF_UNSPEC ;
+	ai_socktype = ffi.C.SOCK_STREAM ;
+	ai_protocol = 0 ;
+} } )
 
 -- Call to handshake an ssl connection
 local function handshake ( sock , e , cb )
@@ -237,26 +249,36 @@ local function request ( url , options , e , cb )
 	end
 
 	url = urlparse ( url )
-			if not addrinfo then onclose ( err ) return end
-	dns.lookup_async ( url.host , url.port or url.scheme or "http" , nil , e , function ( addrinfo , err )
+	local orig_addrinfo -- Gotta keep it around so it doesn't get collected
+	local function addrinfo_callback ( addrinfo , err )
+		if not addrinfo then onconnect ( err ) return end
+		if not orig_addrinfo then orig_addrinfo = addrinfo end
 
-			local sock = socket.new_tcp ( addrinfo.ai_family )
-			sock:connect ( addrinfo , e , function ( sock , err )
-					if not sock then onconnect ( nil , err ) end
-					if url.scheme == "https" then
-						local timer = e:add_timer ( 5 , 0 , function ( timer , n )
-								e:del_fd ( sock:getfile() )
-								onconnect ( nil , "handshake timeout" )
-							end )
-						handshake ( ssl.wrap ( sock , { mode = "client", protocol = "sslv23" } ) , e , function ( ... )
-								timer:disarm ( )
-								onconnect ( ... )
-							end )
+		local sock = socket.new_tcp ( addrinfo.ai_family )
+		sock:connect ( addrinfo , e , function ( sock , err )
+				if not sock then
+					if addrinfo.ai_next ~= ffi.NULL then
+						addrinfo_callback ( addrinfo.ai_next )
 					else
-						onconnect ( sock )
+						onconnect ( nil , "Unable to connect to server" )
 					end
-				end )
-		end )
+					return
+				end
+				if url.scheme == "https" then
+					local timer = e:add_timer ( 5 , 0 , function ( timer , n )
+							e:del_fd ( sock:getfile() )
+							onconnect ( nil , "handshake timeout" )
+						end )
+					handshake ( ssl.wrap ( sock , { mode = "client", protocol = "sslv23" } ) , e , function ( ... )
+							timer:disarm ( )
+							onconnect ( ... )
+						end )
+				else
+					onconnect ( sock )
+				end
+			end )
+	end
+	dns.lookup_async ( url.host , url.port or url.scheme or "http" , hints , e , addrinfo_callback )
 end
 
 return {

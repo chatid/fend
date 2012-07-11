@@ -155,7 +155,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 			if cbs.close then
 				cbs.close ( file , cbs )
 			else
-				e:del_fd ( file , cbs )
+				self:del_fd ( file , cbs )
 			end
 		elseif bit.band ( events , ffi.C.EPOLLRDHUP ) ~= 0 then
 			if cbs.rdclose then

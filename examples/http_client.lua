@@ -240,6 +240,10 @@ local function request ( url , options , e , cb )
 					if onincoming ( sock , buff , c ) then
 						e:del_fd ( file , cbs )
 						sock:close ( )
+						return
+					end
+					if c ~= 0 then
+						return cbs.read ( file , cbs )
 					end
 				end ;
 				close = function ( file , cbs )

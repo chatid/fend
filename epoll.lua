@@ -138,30 +138,30 @@ function epoll_methods:dispatch ( max_events , timeout )
 		end
 		if bit.band ( events , ffi.C.EPOLLIN ) ~= 0 then
 			if cbs.read then
-				cbs.read ( file , cbs )
+				cbs.read ( file , cbs , "read" )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
 			if cbs.write then
-				cbs.write ( file , cbs )
+				cbs.write ( file , cbs , "write" )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
 			if cbs.error then
-				cbs.error ( file , cbs )
+				cbs.error ( file , cbs , "error" )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then
 			if cbs.close then
-				cbs.close ( file , cbs )
+				cbs.close ( file , cbs , "close" )
 			else
 				self:del_fd ( file , cbs )
 			end
 		elseif bit.band ( events , ffi.C.EPOLLRDHUP ) ~= 0 then
 			if cbs.rdclose then
-				cbs.rdclose ( file , cbs )
+				cbs.rdclose ( file , cbs , "rdclose" )
 			elseif cbs.close then
-				cbs.close ( file , cbs )
+				cbs.close ( file , cbs , "close" )
 			else
 				self:del_fd ( file , cbs )
 			end

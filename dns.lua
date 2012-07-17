@@ -68,7 +68,7 @@ local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 				if retlist == list then
 					local err = anl.gai_error ( retlist+0 )
 					if err == 0 then
-						cb ( retlist[0].ar_result )
+						cb ( ffi.gc ( retlist[0].ar_result , ffi.C.freeaddrinfo ) )
 					else
 						cb ( nil , ffi.string ( anl.gai_strerror ( err ) ) )
 					end

@@ -59,11 +59,15 @@ local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
 		print("timer2",t1:status())
 	end )
 
+-- Get address for echo server
 math.randomseed ( os.time() )
 local port = math.random(49192,65535)
 local addrinfo = dns.lookup("*",port)
+
+-- Create the server
 local echo_serv = require"fend.examples.echo"(e,addrinfo,16)
 print("Listening on " .. port )
+
 -- Connect to the echo server
 local str = "hi"
 local sock = socket.new_tcp ( addrinfo.ai_family )

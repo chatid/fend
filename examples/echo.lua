@@ -30,10 +30,8 @@ return function ( e , addrinfo , len )
 					if c == nil then
 						if err == "EOF" then
 							cbs.close ( file , cbs )
-							return
-						else
-							error ( err )
 						end
+						return
 					end
 
 					if c == 0 then return end

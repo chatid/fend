@@ -80,6 +80,26 @@ sock:connect ( addrinfo , e , function ( sock , err )
 			end )
 	end )
 
+do -- Example of writing in coroutine style (connects to echo server)
+	local co = require "fend.examples.cooperative"
+	local go
+	local timer = e:add_timer ( 0 , 0 , function ( timer )
+			go ( "timeout" )
+			return false
+		end )
+	go = co.wrap ( e , function ( c , err )
+			if not c then error ( err ) end
+			assert ( go:send ( c , "hi, sup?" ) )
+			local len = 2
+			local buff = ffi.new ( "char[?]" , len )
+			timer:set ( 0.001 )
+			assert ( go:recv ( c , buff , len ) )
+			timer:disarm ( )
+			print ( "CO" , ffi.string ( buff,len ) )
+		end )
+	socket.new_tcp ( addrinfo.ai_family ):connect ( addrinfo , e , go )
+end
+
 do -- Capture ^C
 	local signal = include "signal"
 	local mask = ffi.new ( "__sigset_t[1]" )

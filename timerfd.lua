@@ -25,6 +25,8 @@ local timer_cbs = {
 		local start , interval = timer.cb ( timer , expired[0] )
 		if start then
 			timer:set ( start , interval )
+		elseif start == false then
+			timer:disarm ( )
 		end
 	end ;
 	edge = true ;
@@ -58,7 +60,7 @@ local timer_mt = {
 }
 
 --- Create a timer that creates events.
--- start is how long from now to fire the timer
+-- start is how long from now to fire the timer; 0 is a disarmed timer
 -- interval (optional) is the period of the timer. Defaults to never (0)
 -- cb is the callback to call when the timer fires; it will receive the timer object and the interval; return values from callback change the timer's start and interval
 -- returns a timer object that has methods `set`, `disarm` and `status`

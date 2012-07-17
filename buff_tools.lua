@@ -1,5 +1,6 @@
 local ffi = require "ffi"
 
+-- Essentially memcmp
 local function equal ( b1 , b2 , l )
 	for i=0,l-1 do
 		if b1[i] ~= b2[i] then

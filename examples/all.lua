@@ -96,7 +96,7 @@ do -- Example of writing in coroutine style (connects to echo server)
 			assert ( go:send ( c , str ) )
 			local len = #str
 			local buff = ffi.new ( "char[?]" , len )
-			timer:set ( 0.001 )
+			timer:set ( 1 )
 			assert ( go:recv ( c , buff , len ) )
 			timer:disarm ( )
 			local str2 = ffi.string(buff,len)

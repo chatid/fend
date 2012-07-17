@@ -71,6 +71,9 @@ function methods:recv ( sock , buff , len )
 end
 methods.receive = methods.recv
 
+-- The function retuns an object with methods `recv` and `send`
+-- These methods yield until they have completed; if an error occurs they return nil , err
+-- Calling the returned value will raise an error inside of send/recv
 local function wrap ( dispatcher , func )
 	local self
 	self = setmetatable ( {

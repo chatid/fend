@@ -208,18 +208,38 @@ function sock_methods:getpeername ( )
 	return sockaddr , sockaddr_len[0]
 end
 
--- Create tcp/ipv? streaming socket
-local function new_tcp ( domain )
-	local fd = ffi.C.socket ( domain , ffi.C.SOCK_STREAM , ffi.C.IPPROTO_TCP )
+local function new ( ... )
+	local domain , sock_type , protocol
+	-- If domain is an addrinfo then extract params from that
+	if ffi.istype ( "struct addrinfo*" , (...) ) then
+		local addrinfo = (...)
+		domain , sock_type , protocol = addrinfo.ai_family , addrinfo.ai_socktype , addrinfo.ai_protocol
+	else
+		domain , sock_type , protocol = ...
+	end
+	local fd = ffi.C.socket ( domain , sock_type , protocol )
 	if fd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
-	local sock = new_sock ( new_file ( fd ) , "TCP" )
+	local proto = ffi.C.getprotobynumber ( protocol )
+	assert ( proto ~= ffi.NULL , "Unable to look up protocol" )
+	local sock = new_sock ( new_file ( fd ) , ffi.string ( proto.p_name ) )
 	sock.file:set_blocking ( false )
 	return sock
 end
 
+local function new_tcp ( domain )
+	return new ( domain , ffi.C.SOCK_STREAM , ffi.C.IPPROTO_TCP )
+end
+
+local function new_udp ( domain )
+	return new ( domain , ffi.C.SOCK_DGRAM  , ffi.C.IPPROTO_UDP )
+end
+
 
 return {
+	new = new ;
 	new_tcp = new_tcp ;
+	new_udp = new_udp ;
+	socket_mt = sock_mt ;
 }

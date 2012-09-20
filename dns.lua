@@ -21,6 +21,32 @@ local function sockaddr_to_string ( sockaddr , addr_len )
 	return ffi.string ( host ) , ffi.string ( serv )
 end
 
+local addrinfo_mt = {
+	__tostring = function ( a )
+		return string.format("ai:%s:[%s]:%s",a:protocol(),sockaddr_to_string(a.ai_addr,a.ai_addrlen))
+	end ;
+	__index = {
+		protocol = function ( a )
+			local proto = ffi.C.getprotobynumber ( a.ai_protocol )
+			assert ( proto ~= ffi.NULL , "Unable to look up protocol" )
+			local pt = { }
+			local i = 0
+			while true do
+				local j = proto.p_aliases [ i ]
+				if j == ffi.NULL then break end
+				i = i + 1
+				pt [ i ] = ffi.string ( j )
+			end
+			return ffi.string(proto.p_name) , pt , proto.p_proto
+		end ;
+		next = function ( a )
+			-- Need to keep parent un-collected
+			return ffi.gc ( a.ai_next , function () return a end )
+		end ;
+	} ;
+}
+ffi.metatype ( "struct addrinfo" , addrinfo_mt )
+
 local function lookup ( hostname , port , hints )
 	local service
 	if port then

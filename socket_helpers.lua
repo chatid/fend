@@ -9,8 +9,17 @@ local errors = include "errno"
 local sock_methods = fend_socket.socket_mt.__index
 local getsockerr   = fend_socket.getsockerr
 
-function sock_methods:connect ( addrinfo , epoll_ob , cb )
-	if ffi.C.connect ( self:getfd() , addrinfo.ai_addr , addrinfo.ai_addrlen ) == -1 then
+function sock_methods:connect ( ... )
+	local sockaddr , sockaddr_len , epoll_ob , cb
+	if ffi.istype ( "struct addrinfo*" , (...) ) then
+		local addrinfo
+		addrinfo , epoll_ob , cb = ...
+		sockaddr , sockaddr_len = addrinfo.ai_addr , addrinfo.ai_addrlen
+	else
+		sockaddr , sockaddr_len , epoll_ob , cb = ...
+	end
+
+	if ffi.C.connect ( self:getfd() , sockaddr , sockaddr_len ) == -1 then
 		local err = ffi.errno ( )
 		if err ~= errors.EINPROGRESS then
 			cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )

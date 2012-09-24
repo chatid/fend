@@ -6,12 +6,12 @@ local strformat = string.format
 
 local ffi = require "ffi"
 local bit = require "bit"
-local dns = require "fend.dns"
-local socket = require "fend.socket"
-local ssl = require "fend.ssl"
-local handshake = require "fend.ssl_handshake".handshake
-local urlparse = require "socket.url".parse
+local dns        = require "fend.dns"
+local socket     = require "fend.socket"
 require "fend.socket_helpers"
+local ssl        = require "fend.ssl"
+local handshake  = require "fend.ssl_handshake".handshake
+local urlparse   = require "socket.url".parse
 local buff_tools = require "fend.buff_tools"
 require "fend.common"
 local netdb = include "netdb"

@@ -4,6 +4,7 @@ require "fend.common"
 include "stdio"
 local errors = include "errno"
 local socket = include "sys/socket"
+include "sys/un"
 local netinet_in = include "netinet/in"
 include "arpa/inet"
 
@@ -178,11 +179,16 @@ local function new_udp ( domain )
 	return new ( domain , ffi.C.SOCK_DGRAM  , ffi.C.IPPROTO_UDP )
 end
 
+local function new_unix ( dgram )
+	return new ( netinet_in.AF_UNIX , dgram and ffi.C.SOCK_DGRAM or ffi.C.SOCK_STREAM , 0 )
+end
 
 return {
-	new = new ;
-	new_tcp = new_tcp ;
-	new_udp = new_udp ;
-	socket_mt = sock_mt ;
+	new        = new ;
+	new_tcp    = new_tcp ;
+	new_udp    = new_udp ;
+	new_unix   = new_unix ;
+
+	socket_mt  = sock_mt ;
 	getsockerr = getsockerr ;
 }

@@ -11,6 +11,7 @@ local socket = require "fend.socket"
 local ssl = require "fend.ssl"
 local handshake = require "fend.ssl_handshake".handshake
 local urlparse = require "socket.url".parse
+require "fend.socket_helpers"
 local buff_tools = require "fend.buff_tools"
 require "fend.common"
 local netdb = include "netdb"

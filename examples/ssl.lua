@@ -1,6 +1,7 @@
 local epoll_ob = require "fend.epoll"()
 local addrinfo = require "fend.dns".lookup ( "google.com" , 443 )
 local sock = require "fend.socket".new_tcp(2)
+require "fend.socket_helpers"
 sock:connect ( addrinfo , epoll_ob , function ( sock , err )
 		assert ( sock , err )
 		local wrap_sock = wrap ( sock , { mode="client" , protocol="tlsv1" } )

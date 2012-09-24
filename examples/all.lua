@@ -15,6 +15,7 @@ include "string" -- For strerror
 local new_file = require "fend.file"
 local dns = require "fend.dns"
 local socket = require "fend.socket"
+require "fend.socket_helpers"
 
 local dontquit = true
 

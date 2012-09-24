@@ -141,6 +141,18 @@ function sock_methods:send ( buff , len , flags )
 	return c
 end
 
+function sock_methods:sendto ( buff , len , flags , dest_addr , dest_addr_len )
+	if not ffi.istype("char*",buff) then
+		buff = tostring ( buff )
+	end
+	len = len or #buff
+	flags = flags or 0
+	local c = ffi.C.sendto ( self:getfd() , buff , len , flags , dest_addr , dest_addr_len )
+	if c == -1 then
+		return nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) )
+	end
+	return c
+end
 
 function sock_methods:read ( buff , len , epoll_ob , cb )
 	if not buff then

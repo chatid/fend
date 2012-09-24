@@ -208,19 +208,20 @@ local function handle_err ( err , c )
 		return nil , "wantread"
 	elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
 		return nil , "wantwrite"
-	elseif err == ssl_defs.SSL_ERROR_SYSCALL then
-		local ssl_err = geterr()
-		if ssl_err then
-			return nil , ssl_err
-		elseif c == 0 then
+	end
+	local ssl_err = geterr()
+	if ssl_err then
+		return nil , ssl_err
+	end
+	if err == ssl_defs.SSL_ERROR_SYSCALL then
+		if c == 0 then
 			return nil , "EOF"
 		elseif c == -1 then
 			return nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) )
 		end
 		return nil , "syscall"
-	else
-		return nil , ffi.string ( ssl.ERR_reason_error_string ( err ) )
 	end
+	return nil , "Unknown error"
 end
 
 function ssl_methods:recv ( buff , len )

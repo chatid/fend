@@ -50,7 +50,8 @@ A non-blocking luasocket-like interface
  	Calls `setsockopt` with the given option (a string, eg `"REUSEADDR"`) and `int` val
 
  - `sock:bind ( addrinfo )`  
-	Binds the socket to the interface given in `addrinfo`
+	`sock:bind ( sockaddr , sockaddr_len )`  
+	Binds the socket to the interface given in `addrinfo` or `sockaddr , sockaddr_len`
 
  - `sock:listen ( backlog )`  
  	Sets the socket to listen with the given backlog (defaults to 128)
@@ -64,6 +65,7 @@ A non-blocking luasocket-like interface
  	Aliased as sock:_shutdown to prevent internal conflicts with the SSL object
 
  - `n_read = sock:recv ( buff , len , flags )`  
+   `n_read = sock:receive ( buff , len , flags )`  
 	`buff` should be a user allocated buffer of length `len`.  
 	`flags` defaults to `0`.  
 	Returns the number of bytes read.
@@ -80,6 +82,9 @@ A non-blocking luasocket-like interface
 
 ### SSL
 Provides a luasec-like interface (even supporting the same context types)
+
+ - `require "fend.ssl_handshake".handshake ( sock , dispatcher , callback )`  
+ 	Will do an ssl handshake on the given socket, and when complete, call your callback.
 
 ### DNS
 Provides dns and host based utilities.

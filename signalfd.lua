@@ -5,7 +5,7 @@ local ffi = require "ffi"
 local new_file = require "fend.file"
 require "fend.common"
 include "stdio"
-include "strings"
+include "string"
 local errors = include "errno"
 include "sys/signalfd"
 

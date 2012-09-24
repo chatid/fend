@@ -5,7 +5,7 @@ local anl = ffi.load ( "anl" )
 require "fend.common"
 local netdb = include "netdb"
 local signal = include "signal"
-include "strings"
+include "string"
 include "arpa.inet"
 
 local function sockaddr_to_string ( sockaddr , addr_len )

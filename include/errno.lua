@@ -1,4 +1,4 @@
-include "strings"
+include "string"
 
 module ( ... )
 

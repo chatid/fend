@@ -11,7 +11,7 @@ local ffi = require "ffi"
 require "fend.common"
 include "stdio"
 include "unistd"
-include "strings" -- For strerror
+include "string" -- For strerror
 local new_file = require "fend.file"
 local dns = require "fend.dns"
 local socket = require "fend.socket"

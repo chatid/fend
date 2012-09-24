@@ -7,7 +7,7 @@ local bit = require "bit"
 local new_file = require "fend.file"
 require "fend.common"
 include "stdio"
-include "strings"
+include "string"
 include "sys/timerfd"
 local time = include "time"
 

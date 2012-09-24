@@ -8,7 +8,7 @@ local new_file = require "fend.file"
 local signalfd = require "fend.signalfd"
 local timerfd = require "fend.timerfd"
 require "fend.common"
-include "strings"
+include "string"
 local errors = include "errno"
 local epoll_lib = include "sys/epoll"
 

@@ -4,7 +4,7 @@ local signalfd = require "fend.signalfd"
 local timerfd = require "fend.timerfd"
 require "fend.common"
 include "stdlib"
-include "strings"
+include "string"
 local poll = include "poll"
 
 local poll_methods = { }

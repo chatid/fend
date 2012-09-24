@@ -9,6 +9,7 @@ local bit = require "bit"
 local dns = require "fend.dns"
 local socket = require "fend.socket"
 local ssl = require "fend.ssl"
+local handshake = require "fend.ssl_handshake".handshake
 local urlparse = require "socket.url".parse
 local buff_tools = require "fend.buff_tools"
 require "fend.common"
@@ -22,28 +23,6 @@ local hints = ffi.new ( "const struct addrinfo[1]" , { {
 	ai_socktype = ffi.C.SOCK_STREAM ;
 	ai_protocol = 0 ;
 } } )
-
--- Call to handshake an ssl connection
-local function handshake ( sock , e , cb )
-	local ok , err = sock:dohandshake ( )
-	if ok then
-		cb ( sock )
-	elseif err == "wantread" then
-		e:add_fd ( sock:getfile() , {
-				read = function ( file , cbs ) return handshake ( sock , e , cb ) end ;
-				oneshot = true ;
-				edge = true ;
-			} )
-	elseif err == "wantwrite" then
-		e:add_fd ( sock:getfile() , {
-				write = function ( file , cbs ) return handshake ( sock , e , cb ) end ;
-				oneshot = true ;
-				edge = true ;
-			} )
-	else
-		cb ( nil , err )
-	end
-end ;
 
 local function request ( url , options , e , cb )
 	local ret = { headers = { } , body = { } }

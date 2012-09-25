@@ -70,6 +70,9 @@ A non-blocking luasocket-like interface
 	`flags` defaults to `0`.  
 	Returns the number of bytes read.
 
+ - `n_read = sock:peek ( buff , len , flags )`  
+ 	Same as `sock:recv`, but the MSG_PEEK flag is set
+
  - `n_bytes = sock:send ( buff , len , flags )`  
  	Sends buff to the connected peer  
 	If `buff` is not a `const char*` then it will have `tostring` called on it.  

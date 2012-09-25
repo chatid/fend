@@ -116,6 +116,10 @@ function sock_methods:recv ( buff , len , flags )
 end
 sock_methods.receive = sock_methods.recv
 
+function sock_methods:peek ( buff , len , flags )
+	return self:recv ( buff , len , bit.bor ( flags , ffi.C.MSG_PEEK ) )
+end
+
 function sock_methods:send ( buff , len , flags )
 	if not ffi.istype("char*",buff) then
 		buff = tostring ( buff )

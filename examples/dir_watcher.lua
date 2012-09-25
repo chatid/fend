@@ -3,7 +3,7 @@ local e = require "fend.poll"()
 local cbs = { }
 for i , event_name in ipairs {
 	"access" , "attrib" , "close_write" , "close_nowrite" ,
-	"create" , "delete" , "delete_self" , "modify" , "move" ,
+	"create" , "delete" , "delete_self" , "modify" , "move_self" ,
 	"moved_from" , "moved_to" , "open" } do
 	cbs [ event_name ] = function ( watcher , name )
 		local path = watcher.path:gsub("/$","") -- Remove trailing slash

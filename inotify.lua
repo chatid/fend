@@ -70,8 +70,8 @@ local i_cb_table = {
 				if bit.band ( mask , defines.IN_MODIFY        ) ~= 0 and cbs.modify then
 					cbs.modify      ( watcher , name )
 				end
-				if bit.band ( mask , defines.IN_MOVE_SELF     ) ~= 0 and cbs.move then
-					cbs.move        ( watcher , name )
+				if bit.band ( mask , defines.IN_MOVE_SELF     ) ~= 0 and cbs.move_self then
+					cbs.move_self   ( watcher , name )
 				end
 				if bit.band ( mask , defines.IN_MOVED_FROM    ) ~= 0 and cbs.moved_from then
 					cbs.moved_from  ( watcher , name , event.cookie )
@@ -122,7 +122,7 @@ local function cbs_to_mask ( cbs )
 		cbs.delete                         and defines.IN_DELETE        or 0,
 		cbs.delete_self                    and defines.IN_DELETE_SELF   or 0,
 		cbs.modify                         and defines.IN_MODIFY        or 0,
-		cbs.move                           and defines.IN_MOVE_SELF     or 0,
+		cbs.move_self                      and defines.IN_MOVE_SELF     or 0,
 		cbs.moved_from                     and defines.IN_MOVED_FROM    or 0,
 		cbs.moved_to                       and defines.IN_MOVED_TO      or 0,
 		cbs.open                           and defines.IN_OPEN          or 0,

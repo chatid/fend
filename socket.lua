@@ -116,6 +116,26 @@ function sock_methods:recv ( buff , len , flags )
 end
 sock_methods.receive = sock_methods.recv
 
+function sock_methods:recvfrom ( buff , len , flags , address , address_len )
+	flags = flags or 0
+	address     = address or ffi.new ( "struct sockaddr" )
+	address_len = address_len or ffi.sizeof ( address )
+    local address_len_box = ffi.new ( "socklen_t[1]" , address_len )
+	local c = tonumber ( ffi.C.recvfrom ( self:getfd() , buff , len , flags ,
+			ffi.new ( "struct sockaddr*" , address ) , address_len_box ) )
+	if c == 0 then
+		return nil , "EOF"
+	elseif c == -1 then
+		local err = ffi.errno ( )
+		if err == defines.EAGAIN or err == defines.EWOULDBLOCK then
+			return 0
+		else
+			return nil , ffi.string ( ffi.C.strerror ( err ) )
+		end
+	end
+	return c , address , address_len_box[0]
+end
+
 function sock_methods:peek ( buff , len , flags )
 	return self:recv ( buff , len , bit.bor ( flags , ffi.C.MSG_PEEK ) )
 end

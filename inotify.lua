@@ -1,3 +1,4 @@
+local bit = require "bit"
 local ffi = require "ffi"
 local new_file = require "fend.file"
 require "fend.common"
@@ -17,8 +18,8 @@ local global_buff = ffi.new ( "char[?]" , event_max_size )
 local i_fd_map = setmetatable ( { } , { __mode = "k" } )
 
 local i_cb_table = {
-	read = function ( file , cbs )
-		local r = tonumber ( ffi.C.read ( file:getfd() , buff , event_max_size ) )
+	read = function ( file , read_cbs )
+		local r = tonumber ( ffi.C.read ( file:getfd() , global_buff , event_max_size ) )
 		if r == -1 then
 			local err = ffi.errno ( )
 			if err == defines.EAGAIN then
@@ -43,6 +44,7 @@ local i_cb_table = {
 				if event.len > 0 then
 					name = ffi.string ( event.name , event.len-1 )
 				end
+				local cbs = watcher.cbs
 
 				if bit.band ( mask , defines.IN_ACCESS        ) ~= 0 and cbs.access then
 					cbs.access      ( watcher , name )
@@ -86,12 +88,7 @@ local i_cb_table = {
 			buff = buff + actual_size
 		end
 
-		local signum = info[0].ssi_signo
-		for id , cb in pairs ( data.sigcbs [ signum ] ) do
-			cb ( info , id )
-		end
-
-		return cbs.read ( file , cbs ) -- Call self until EAGAIN
+		return read_cbs.read ( file , read_cbs ) -- Call self until EAGAIN
 	end ;
 	edge = true ;
 }
@@ -139,7 +136,10 @@ local function cbs_to_mask ( cbs )
 end
 
 local function add_path ( dispatcher , path , cbs )
-	local wd = ffi.C.inotify_add_watch ( self.inotify.i_fd , self.path , mask )
+	local self = dispatcher.inotify
+
+	local mask = cbs_to_mask ( cbs )
+	local wd = ffi.C.inotify_add_watch ( self.i_fd:getfd() , path , mask )
 	if wd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end

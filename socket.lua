@@ -148,7 +148,12 @@ function sock_methods:send ( buff , len , flags )
 	flags = flags or ffi.C.MSG_NOSIGNAL
 	local c = tonumber ( ffi.C.send ( self:getfd() , buff , len , flags ) )
 	if c == -1 then
-		return nil , ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) )
+		local err = ffi.errno ( )
+		if err == defines.EAGAIN or err == defines.EWOULDBLOCK then
+			return 0
+		else
+			return nil , ffi.string ( ffi.C.strerror ( err ) )
+		end
 	end
 	return c
 end

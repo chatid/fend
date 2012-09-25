@@ -7,10 +7,10 @@ local bit = require "bit"
 local new_file = require "fend.file"
 local signalfd = require "fend.signalfd"
 local timerfd = require "fend.timerfd"
+
 require "fend.common"
 include "string"
-local errors = include "errno"
-local epoll_lib = include "sys/epoll"
+include "sys/epoll"
 
 local epoll_methods = { }
 local epoll_mt = {
@@ -53,9 +53,9 @@ function epoll_methods:add_fd ( file , cbs )
 	local fd = file:getfd()
 	local op
 	if self.registered [ file ] then
-		op = epoll_lib.EPOLL_CTL_MOD
+		op = defines.EPOLL_CTL_MOD
 	else
-		op = epoll_lib.EPOLL_CTL_ADD
+		op = defines.EPOLL_CTL_ADD
 	end
 
 	local __events = ffi.new ( "struct epoll_event[1]" )
@@ -78,7 +78,7 @@ end
 -- fd is the file descriptor to stop watching
 function epoll_methods:del_fd ( file )
 	local fd = file:getfd()
-	if ffi.C.epoll_ctl ( self.epfile:getfd() , epoll_lib.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
+	if ffi.C.epoll_ctl ( self.epfile:getfd() , defines.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	self.registered [ file ] = nil
@@ -129,7 +129,7 @@ function epoll_methods:dispatch ( max_events , timeout )
 		local cbs = self.registered [ file ]
 		--print(string.format("EVENT on %s: %s", tostring(file), event_string(events)))
 		if cbs.oneshot then
-			if ffi.C.epoll_ctl ( self.epfile:getfd() , epoll_lib.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
+			if ffi.C.epoll_ctl ( self.epfile:getfd() , defines.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
 				self.locked = false
 				error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 			end

@@ -5,7 +5,7 @@ local timerfd = require "fend.timerfd"
 require "fend.common"
 include "stdlib"
 include "string"
-local poll = include "poll"
+include "poll"
 
 local poll_methods = { }
 local poll_mt = {
@@ -70,28 +70,28 @@ function poll_methods:dispatch ( max_events , timeout )
 		if cbs.oneshot then
 			self:del_fd ( file )
 		end
-		if bit.band ( revents , poll.POLLIN ) ~= 0 then
+		if bit.band ( revents , defines.POLLIN ) ~= 0 then
 			if cbs.read then
 				cbs.read ( file , cbs , "read" )
 			end
 		end
-		if bit.band ( revents , poll.POLLOUT ) ~= 0 then
+		if bit.band ( revents , defines.POLLOUT ) ~= 0 then
 			if cbs.write then
 				cbs.write ( file , cbs , "write" )
 			end
 		end
-		if bit.band ( revents , poll.POLLERR ) ~= 0 then
+		if bit.band ( revents , defines.POLLERR ) ~= 0 then
 			if cbs.error then
 				cbs.error ( file , cbs , "error" )
 			end
 		end
-		if bit.band ( revents , poll.POLLHUP ) ~= 0 then
+		if bit.band ( revents , defines.POLLHUP ) ~= 0 then
 			if cbs.close then
 				cbs.close ( file , cbs , "close" )
 			else
 				self:del_fd ( file , cbs )
 			end
-		elseif bit.band ( revents , poll.POLLRDHUP ) ~= 0 then
+		elseif bit.band ( revents , defines.POLLRDHUP ) ~= 0 then
 			if cbs.rdclose then
 				cbs.rdclose ( file , cbs , "rdclose" )
 			elseif cbs.close then
@@ -125,9 +125,9 @@ function poll_methods:add_fd ( file , cbs )
 	end
 	local pollfd = self.fds [ info.index ]
 	pollfd.events = bit.bor (
-		cbs.read and poll.POLLIN or 0 ,
-		cbs.write and poll.POLLOUT or 0 ,
-		cbs.rdclose and poll.POLLRDHUP or 0 )
+		cbs.read and defines.POLLIN or 0 ,
+		cbs.write and defines.POLLOUT or 0 ,
+		cbs.rdclose and defines.POLLRDHUP or 0 )
 	pollfd.fd = fd
 end
 

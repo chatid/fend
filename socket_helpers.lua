@@ -1,10 +1,8 @@
 local ffi = require "ffi"
-
 local fend_socket = require "fend.socket"
 require "fend.common"
-local socket = include "sys/socket"
-local errors = include "errno"
-
+include "errno"
+include "sys/socket"
 
 local sock_methods = fend_socket.socket_mt.__index
 local getsockerr   = fend_socket.getsockerr
@@ -21,7 +19,7 @@ function sock_methods:connect ( ... )
 
 	if ffi.C.connect ( self:getfd() , sockaddr , sockaddr_len ) == -1 then
 		local err = ffi.errno ( )
-		if err ~= errors.EINPROGRESS then
+		if err ~= defines.EINPROGRESS then
 			cb ( nil , ffi.string ( ffi.C.strerror ( err ) ) )
 			return
 		end

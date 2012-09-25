@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 ffi.cdef[[
 typedef struct stack_st
  {

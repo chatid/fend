@@ -1,8 +1,6 @@
 include "sys/types"
 
-local bit = require "bit"
-
-require "ffi".cdef [[
+ffi.cdef [[
 enum
 	{
 		IN_CLOEXEC = 02000000,
@@ -23,8 +21,6 @@ extern int inotify_add_watch (int __fd, const char *__name, uint32_t __mask)
 	__attribute__ ((__nothrow__ , __leaf__));
 extern int inotify_rm_watch (int __fd, int __wd) __attribute__ ((__nothrow__ , __leaf__));
 ]]
-
-module ( ... )
 
 -- Supported events suitable for MASK parameter of INOTIFY_ADD_WATCH.
 IN_ACCESS        = 0x00000001     -- File was accessed.
@@ -63,5 +59,3 @@ IN_ONESHOT       = 0x80000000     -- Only send event once.
 IN_ALL_EVENTS    = bit.bor ( IN_ACCESS , IN_MODIFY , IN_ATTRIB , IN_CLOSE_WRITE
 	, IN_CLOSE_NOWRITE , IN_OPEN , IN_MOVED_FROM , IN_MOVED_TO , IN_CREATE , IN_DELETE
 	, IN_DELETE_SELF , IN_MOVE_SELF )
-
-return _M

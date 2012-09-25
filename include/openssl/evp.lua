@@ -1,6 +1,3 @@
-local ffi = require "ffi"
-local bit = require "bit"
-
 include "openssl/ossl_typ"
 include "openssl/symhacks"
 include "openssl/bio"
@@ -588,8 +585,6 @@ void EVP_PKEY_meth_set_ctrl(EVP_PKEY_METHOD *pmeth,
 void ERR_load_EVP_strings(void);
 ]]
 
-module ( ... )
-
 EVP_aes_128_cfb = EVP_aes_128_cfb128
 EVP_aes_192_cfb = EVP_aes_192_cfb128
 EVP_aes_256_cfb = EVP_aes_256_cfb128
@@ -887,5 +882,3 @@ EVP_R_WRONG_FINAL_BLOCK_LENGTH = 109
 EVP_R_WRONG_PUBLIC_KEY_TYPE = 110
 EVP_rc2_cfb = EVP_rc2_cfb64
 EVP_seed_cfb = EVP_seed_cfb128
-
-return _M

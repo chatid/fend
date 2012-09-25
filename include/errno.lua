@@ -1,7 +1,5 @@
 include "string"
 
-module ( ... )
-
 E2BIG = 7
 EACCES = 13
 EADDRINUSE = 98
@@ -137,5 +135,3 @@ EXFULL = 54
 EWOULDBLOCK = EAGAIN
 ENOTSUP = EOPNOTSUPP
 EDEADLOCK = EDEADLK
-
-return _M

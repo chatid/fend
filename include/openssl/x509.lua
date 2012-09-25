@@ -1,6 +1,3 @@
-local bit = require "bit"
-local ffi = require "ffi"
-
 include "openssl/e_os2"
 include "openssl/symhacks"
 include "openssl/buffer"
@@ -1161,8 +1158,6 @@ int X509_TRUST_get_trust(X509_TRUST *xp);
 void ERR_load_X509_strings(void);
 ]]
 
-module ( ... )
-
 X509_EX_V_INIT = 0x0001
 X509_EX_V_NETSCAPE_HACK = 0x8000
 X509_EXT_PACK_STRING = 2
@@ -1351,5 +1346,3 @@ X509_VP_FLAG_LOCKED = 0x8
 X509_VP_FLAG_ONCE = 0x10
 X509_VP_FLAG_OVERWRITE = 0x2
 X509_VP_FLAG_RESET_FLAGS = 0x4
-
-return _M

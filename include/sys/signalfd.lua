@@ -1,6 +1,6 @@
 include "signal"
 
-require "ffi".cdef [[
+ffi.cdef [[
 struct signalfd_siginfo
 {
   uint32_t ssi_signo;

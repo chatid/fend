@@ -1,6 +1,6 @@
 include "sys/socket"
 
-require"ffi".cdef [[
+ffi.cdef [[
 enum
   {
     IPPROTO_IP = 0,
@@ -170,8 +170,6 @@ extern int bindresvport6 (int __sockfd, struct sockaddr_in6 *__sock_in)
      __attribute__ ((__nothrow__ , __leaf__));
 ]]
 
-module ( ... )
-
 PF_UNSPEC = 0
 PF_INET = 2
 PF_IPX = 4
@@ -260,5 +258,3 @@ AF_ALG = PF_ALG
 
 INET6_ADDRSTRLEN = 46
 INET_ADDRSTRLEN = 16
-
-return _M

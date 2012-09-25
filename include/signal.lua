@@ -1,6 +1,6 @@
 include "sys/types"
 
-require "ffi".cdef [[
+ffi.cdef [[
 typedef __sig_atomic_t sig_atomic_t;
 
 typedef __sigset_t sigset_t;
@@ -412,8 +412,6 @@ extern int __libc_current_sigrtmin (void) __attribute__ ((__nothrow__ , __leaf__
 extern int __libc_current_sigrtmax (void) __attribute__ ((__nothrow__ , __leaf__));
 ]]
 
-module ( ... )
-
 SIGHUP = 1 --  Hangup (POSIX).
 SIGINT = 2 --  Interrupt (ANSI).
 SIGQUIT = 3 --  Quit (POSIX).
@@ -468,5 +466,3 @@ SA_STACK = SA_ONSTACK
 SIG_BLOCK = 0 --  Block signals.
 SIG_UNBLOCK = 1 --  Unblock signals.
 SIG_SETMASK = 2 --  Set the set of blocked signals.
-
-return _M

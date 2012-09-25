@@ -1,6 +1,3 @@
-local ffi = require "ffi"
-local bit = require "bit"
-
 include "openssl/e_os2"
 include "openssl/comp"
 include "openssl/bio"
@@ -933,8 +930,6 @@ void SSL_set_debug(SSL *s, int debug);
 int SSL_cache_hit(SSL *s);
 void ERR_load_SSL_strings(void);
 ]]
-
-module ( ... )
 
 CHARTYPE_FIRST_ESC_2253 = 0x20
 CHARTYPE_LAST_ESC_2253 = 0x40
@@ -4735,5 +4730,3 @@ SSL3_RT_MAX_COMPRESSED_LENGTH = (SSL3_RT_MAX_PLAIN_LENGTH+SSL3_RT_MAX_COMPRESSED
 SSL3_RT_MAX_ENCRYPTED_LENGTH = (SSL3_RT_MAX_ENCRYPTED_OVERHEAD+SSL3_RT_MAX_COMPRESSED_LENGTH)
 SSL3_RT_MAX_PACKET_SIZE = (SSL3_RT_MAX_ENCRYPTED_LENGTH+SSL3_RT_HEADER_LENGTH)
 SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD = (SSL_RT_MAX_CIPHER_BLOCK_SIZE + SSL3_RT_MAX_MD_SIZE)
-
-return _M

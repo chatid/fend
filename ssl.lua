@@ -1,8 +1,8 @@
 local ffi = require "ffi"
-require "fend.common"
 local ssl = ffi.load ( "ssl" )
-local ssl_defs = include "openssl/ssl"
-local err = include "openssl/err"
+require "fend.common"
+include "openssl/ssl"
+include "openssl/err"
 
 -- From LuaSec
 ffi.cdef [[
@@ -55,7 +55,7 @@ function context_methods:loadkey ( filename , password )
 		end )
 
 	ssl.SSL_CTX_set_default_passwd_cb ( self.context , passwd_callback )
-	if ssl.SSL_CTX_use_PrivateKey_file ( self.context , filename , ssl_defs.SSL_FILETYPE_PEM ) ~= 1 then
+	if ssl.SSL_CTX_use_PrivateKey_file ( self.context , filename , defines.SSL_FILETYPE_PEM ) ~= 1 then
 		error ( geterr() )
 	end
 	ssl.SSL_CTX_set_default_passwd_cb ( self.context , nil )
@@ -75,10 +75,10 @@ function context_methods:locations ( file , dir )
 end
 
 local verifys = {
-	none = ssl_defs.SSL_VERIFY_NONE ;
-	peer = ssl_defs.SSL_VERIFY_PEER ;
-	client_once = ssl_defs.SSL_VERIFY_CLIENT_ONCE ;
-	fail_if_no_peer_cert = ssl_defs.SSL_VERIFY_FAIL_IF_NO_PEER_CERT ;
+	none                 = defines.SSL_VERIFY_NONE ;
+	peer                 = defines.SSL_VERIFY_PEER ;
+	client_once          = defines.SSL_VERIFY_CLIENT_ONCE ;
+	fail_if_no_peer_cert = defines.SSL_VERIFY_FAIL_IF_NO_PEER_CERT ;
 }
 function context_methods:set_verify ( flag )
 	if type ( flag ) == "string" then
@@ -94,37 +94,37 @@ function context_methods:set_verify ( flag )
 end
 
 local options = {
-	all = ssl_defs.SSL_OP_ALL ;
-	cipher_server_preference = ssl_defs.SSL_OP_CIPHER_SERVER_PREFERENCE ;
-	dont_insert_empty_fragments = ssl_defs.SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS ;
-	ephemeral_rsa = ssl_defs.SSL_OP_EPHEMERAL_RSA ;
-	netscape_ca_dn_bug = ssl_defs.SSL_OP_NETSCAPE_CA_DN_BUG ;
-	netscape_challenge_bug = ssl_defs.SSL_OP_NETSCAPE_CHALLENGE_BUG ;
-	microsoft_big_sslv3_buffer = ssl_defs.SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER ;
-	microsoft_sess_id_bug = ssl_defs.SSL_OP_MICROSOFT_SESS_ID_BUG ;
-	msie_sslv2_rsa_padding = ssl_defs.SSL_OP_MSIE_SSLV2_RSA_PADDING ;
-	netscape_demo_cipher_change_bug = ssl_defs.SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG ;
-	netscape_reuse_cipher_change_bug = ssl_defs.SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG ;
-	no_session_resumption_on_renegotiation = ssl_defs.SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION ;
-	no_sslv2 = ssl_defs.SSL_OP_NO_SSLv2 ;
-	no_sslv3 = ssl_defs.SSL_OP_NO_SSLv3 ;
-	no_tlsv1 = ssl_defs.SSL_OP_NO_TLSv1 ;
-	pkcs1_check_1 = ssl_defs.SSL_OP_PKCS1_CHECK_1 ;
-	pkcs1_check_2 = ssl_defs.SSL_OP_PKCS1_CHECK_2 ;
-	single_dh_use = ssl_defs.SSL_OP_SINGLE_DH_USE ;
-	ssleay_080_client_dh_bug = ssl_defs.SSL_OP_SSLEAY_080_CLIENT_DH_BUG ;
-	sslref2_reuse_cert_type_bug = ssl_defs.SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG ;
-	tls_block_padding_bug = ssl_defs.SSL_OP_TLS_BLOCK_PADDING_BUG ;
-	tls_d5_bug = ssl_defs.SSL_OP_TLS_D5_BUG ;
-	tls_rollback_bug = ssl_defs.SSL_OP_TLS_ROLLBACK_BUG ;
+	all                                    = defines.SSL_OP_ALL ;
+	cipher_server_preference               = defines.SSL_OP_CIPHER_SERVER_PREFERENCE ;
+	dont_insert_empty_fragments            = defines.SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS ;
+	ephemeral_rsa                          = defines.SSL_OP_EPHEMERAL_RSA ;
+	netscape_ca_dn_bug                     = defines.SSL_OP_NETSCAPE_CA_DN_BUG ;
+	netscape_challenge_bug                 = defines.SSL_OP_NETSCAPE_CHALLENGE_BUG ;
+	microsoft_big_sslv3_buffer             = defines.SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER ;
+	microsoft_sess_id_bug                  = defines.SSL_OP_MICROSOFT_SESS_ID_BUG ;
+	msie_sslv2_rsa_padding                 = defines.SSL_OP_MSIE_SSLV2_RSA_PADDING ;
+	netscape_demo_cipher_change_bug        = defines.SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG ;
+	netscape_reuse_cipher_change_bug       = defines.SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG ;
+	no_session_resumption_on_renegotiation = defines.SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION ;
+	no_sslv2                               = defines.SSL_OP_NO_SSLv2 ;
+	no_sslv3                               = defines.SSL_OP_NO_SSLv3 ;
+	no_tlsv1                               = defines.SSL_OP_NO_TLSv1 ;
+	pkcs1_check_1                          = defines.SSL_OP_PKCS1_CHECK_1 ;
+	pkcs1_check_2                          = defines.SSL_OP_PKCS1_CHECK_2 ;
+	single_dh_use                          = defines.SSL_OP_SINGLE_DH_USE ;
+	ssleay_080_client_dh_bug               = defines.SSL_OP_SSLEAY_080_CLIENT_DH_BUG ;
+	sslref2_reuse_cert_type_bug            = defines.SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG ;
+	tls_block_padding_bug                  = defines.SSL_OP_TLS_BLOCK_PADDING_BUG ;
+	tls_d5_bug                             = defines.SSL_OP_TLS_D5_BUG ;
+	tls_rollback_bug                       = defines.SSL_OP_TLS_ROLLBACK_BUG ;
 }
-if ssl_defs.OPENSSL_VERSION_NUMBER > 0x00908000 then -- OpenSSL 0.9.8 only
-	options.cookie_exchange = ssl_defs.SSL_OP_COOKIE_EXCHANGE ;
-	options.no_query_mtu = ssl_defs.SSL_OP_NO_QUERY_MTU ;
-	options.single_ecdh_use = ssl_defs.SSL_OP_SINGLE_ECDH_USE ;
+if defines.OPENSSL_VERSION_NUMBER > 0x00908000 then -- OpenSSL 0.9.8 only
+	options.cookie_exchange = defines.SSL_OP_COOKIE_EXCHANGE ;
+	options.no_query_mtu    = defines.SSL_OP_NO_QUERY_MTU ;
+	options.single_ecdh_use = defines.SSL_OP_SINGLE_ECDH_USE ;
 end
-if ssl_defs.SSL_OP_NO_TICKET then -- OpenSSL 0.9.8f and above
-	options.no_ticket = ssl_defs.SSL_OP_NO_TICKET ;
+if defines.SSL_OP_NO_TICKET then -- OpenSSL 0.9.8f and above
+	options.no_ticket = defines.SSL_OP_NO_TICKET ;
 end
 function context_methods:set_options ( flag )
 	if type ( flag ) == "string" then
@@ -166,14 +166,14 @@ local function new_context ( params )
 			context = context ;
 			mode = assert ( modes [ params.mode ] , "Invalid mode" ) ;
 		} )
-	ssl.SSL_CTX_ctrl ( context , ssl_defs.SSL_CTRL_SET_SESS_CACHE_MODE , ssl_defs.SSL_SESS_CACHE_OFF , ffi.NULL )
-	ssl.SSL_CTX_ctrl ( context , ssl_defs.SSL_CTRL_MODE , bit.bor ( ssl_defs.SSL_MODE_ENABLE_PARTIAL_WRITE , ssl_defs.SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER ) , ffi.NULL )
+	ssl.SSL_CTX_ctrl ( context , defines.SSL_CTRL_SET_SESS_CACHE_MODE , defines.SSL_SESS_CACHE_OFF , ffi.NULL )
+	ssl.SSL_CTX_ctrl ( context , defines.SSL_CTRL_MODE , bit.bor ( defines.SSL_MODE_ENABLE_PARTIAL_WRITE , defines.SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER ) , ffi.NULL )
 	if params.key then
 		self:loadkey ( params.key , params.password )
 	end
 	if params.certificate then
 		self:loadcert ( params.certificate )
-		end
+	end
 	if params.cafile or params.capath then
 		self:locations ( params.cafile , params.capath )
 	end
@@ -204,16 +204,16 @@ function ssl_methods:getfd ( )
 end
 
 local function handle_err ( err , c )
-	if err == ssl_defs.SSL_ERROR_WANT_READ then
+	if err == defines.SSL_ERROR_WANT_READ then
 		return nil , "wantread"
-	elseif err == ssl_defs.SSL_ERROR_WANT_WRITE then
+	elseif err == defines.SSL_ERROR_WANT_WRITE then
 		return nil , "wantwrite"
 	end
 	local ssl_err = geterr()
 	if ssl_err then
 		return nil , ssl_err
 	end
-	if err == ssl_defs.SSL_ERROR_SYSCALL then
+	if err == defines.SSL_ERROR_SYSCALL then
 		if c == 0 then
 			return nil , "EOF"
 		elseif c == -1 then

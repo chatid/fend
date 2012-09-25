@@ -1,6 +1,6 @@
 include "sys/types"
 
-require "ffi".cdef [[
+ffi.cdef [[
 typedef __clock_t clock_t;
 
 
@@ -99,8 +99,6 @@ extern int timer_gettime (timer_t __timerid, struct itimerspec *__value)
 extern int timer_getoverrun (timer_t __timerid) __attribute__ ((__nothrow__ , __leaf__));
 ]]
 
-module ( ... )
-
 CLOCK_REALTIME = 0
 CLOCK_MONOTONIC = 1
 CLOCK_PROCESS_CPUTIME_ID = 2
@@ -111,5 +109,3 @@ CLOCK_MONOTONIC_COARSE = 6
 CLOCK_BOOTTIME =7
 CLOCK_REALTIME_ALARM = 8 -- Like CLOCK_REALTIME but also wakes suspended system.
 CLOCK_BOOTTIME_ALARM = 9 -- Like CLOCK_BOOTTIME but also wakes suspended system.
-
-return _M

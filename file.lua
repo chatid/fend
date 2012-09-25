@@ -1,7 +1,7 @@
 local ffi = require "ffi"
 local bit = require "bit"
 require "fend.common"
-local fcntl = include "fcntl"
+include "fcntl"
 include "unistd"
 
 ffi.cdef [[
@@ -27,16 +27,16 @@ function file_methods:getfd ( )
 end
 
 function file_methods:set_blocking ( bool )
-	local flags = ffi.C.fcntl ( self:getfd() , fcntl.F_GETFL )
+	local flags = ffi.C.fcntl ( self:getfd() , defines.F_GETFL )
 	if flags == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	if not bool then
-		flags = bit.bor ( flags , fcntl.O_NONBLOCK )
+		flags = bit.bor ( flags , defines.O_NONBLOCK )
 	else
-		flags = bit.band ( flags , bit.bnot ( fcntl.O_NONBLOCK ) )
+		flags = bit.band ( flags , bit.bnot ( defines.O_NONBLOCK ) )
 	end
-	if ffi.C.fcntl ( self:getfd() , fcntl.F_SETFL , ffi.cast ( "int" , flags ) ) == -1 then
+	if ffi.C.fcntl ( self:getfd() , defines.F_SETFL , ffi.cast ( "int" , flags ) ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 end

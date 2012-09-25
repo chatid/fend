@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/e_os2"
 include "openssl/bio"
 include "openssl/crypto"
@@ -104,8 +102,6 @@ DH *DSA_dup_DH(const DSA *r);
 void ERR_load_DSA_strings(void);
 ]]
 
-module ( ... )
-
 DSA_F_D2I_DSA_SIG = 110
 DSA_F_DO_DSA_PRINT = 104
 DSA_F_DSA_DO_SIGN = 112
@@ -147,5 +143,3 @@ DSA_R_NEED_NEW_SETUP_VALUES = 110
 DSA_R_NO_PARAMETERS_SET = 107
 DSA_R_NON_FIPS_DSA_METHOD = 111
 DSA_R_PARAMETER_ENCODING_ERROR = 105
-
-return _M

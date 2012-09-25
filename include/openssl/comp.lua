@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/crypto"
 
 ffi.cdef[[
@@ -40,8 +38,6 @@ void COMP_zlib_cleanup(void);
 void ERR_load_COMP_strings(void);
 ]]
 
-module(...)
-
 COMP_F_BIO_ZLIB_NEW = 100
 COMP_F_BIO_ZLIB_READ = 101
 COMP_F_BIO_ZLIB_WRITE = 102
@@ -49,5 +45,3 @@ COMP_F_BIO_ZLIB_WRITE = 102
 COMP_R_ZLIB_DEFLATE_ERROR = 99
 COMP_R_ZLIB_INFLATE_ERROR = 100
 COMP_R_ZLIB_NOT_SUPPORTED = 101
-
-return _M

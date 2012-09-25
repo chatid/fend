@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/e_os2"
 include "openssl/bio"
 include "openssl/ossl_typ"
@@ -69,8 +67,6 @@ int DHparams_print(BIO *bp, const DH *x);
 void ERR_load_DH_strings(void);
 ]]
 
-module ( ... )
-
 DH_CHECK_P_NOT_PRIME           = 0x01
 DH_CHECK_P_NOT_SAFE_PRIME      = 0x02
 DH_CHECK_P_NOT_STRONG_PRIME    = DH_CHECK_P_NOT_SAFE_PRIME
@@ -113,5 +109,3 @@ DH_R_NO_PRIVATE_VALUE          = 100
 DH_R_NON_FIPS_METHOD           = 111
 DH_R_PARAMETER_ENCODING_ERROR  = 105
 DH_UNABLE_TO_CHECK_GENERATOR   = 0x04
-
-return _M

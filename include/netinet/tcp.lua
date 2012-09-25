@@ -1,7 +1,7 @@
 include "sys/types"
 include "sys/socket"
 
-require"ffi".cdef [[
+ffi.cdef [[
 struct tcphdr
   {
     u_int16_t source;
@@ -87,8 +87,6 @@ struct tcp_md5sig
 };
 ]]
 
-module ( ... )
-
 TCP_NODELAY      = 1      -- Don't delay send to coalesce packets
 TCP_MAXSEG       = 2      -- Set maximum segment size
 TCP_CORK         = 3      -- Control sending of partial frames
@@ -137,5 +135,3 @@ TCPI_OPT_WSCALE     = 4
 TCPI_OPT_ECN        = 8
 
 TCP_MD5SIG_MAXKEYLEN = 80
-
-return _M

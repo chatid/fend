@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/e_os2"
 include "openssl/bio"
 include "openssl/stack"
@@ -149,8 +147,6 @@ int i2b_PVK_bio(BIO *out, EVP_PKEY *pk, int enclevel,
 void ERR_load_PEM_strings(void);
 ]]
 
-module ( ... )
-
 PEM_BUFSIZE = 1024
 PEM_DEK_DES_CBC = 40
 PEM_DEK_DES_ECB = 60
@@ -281,5 +277,3 @@ PEM_TYPE_CLEAR = 40
 PEM_TYPE_ENCRYPTED = 10
 PEM_TYPE_MIC_CLEAR = 30
 PEM_TYPE_MIC_ONLY = 20
-
-return _M

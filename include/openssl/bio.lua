@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/e_os2"
 include "stdio"
 include "openssl/crypto"
@@ -165,8 +163,6 @@ int BIO_vsnprintf(char *buf, size_t n, const char *format, va_list args)
  __attribute__((__format__(__printf__,3,0)));
 void ERR_load_BIO_strings(void);
 ]]
-
-module ( ... )
 
 BIO_BIND_NORMAL = 0
 BIO_BIND_REUSEADDR = 2
@@ -362,5 +358,3 @@ BIO_TYPE_DESCRIPTOR = 0x0100
 BIO_TYPE_FILTER = 0x0200
 BIO_TYPE_NONE = 0
 BIO_TYPE_SOURCE_SINK = 0x0400
-
-return _M

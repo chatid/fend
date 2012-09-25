@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/evp"
 
 ffi.cdef [[
@@ -27,8 +25,4 @@ int HMAC_CTX_copy(HMAC_CTX *dctx, HMAC_CTX *sctx);
 void HMAC_CTX_set_flags(HMAC_CTX *ctx, unsigned long flags);
 ]]
 
-module ( ... )
-
 HMAC_MAX_MD_CBLOCK = 128
-
-return _M

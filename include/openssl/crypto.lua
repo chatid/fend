@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "stdlib"
 include "stdio"
 include "openssl/e_os2"
@@ -152,8 +150,6 @@ void OPENSSL_init(void);
 void ERR_load_CRYPTO_strings(void);
 ]]
 
-module ( ... )
-
 CRYPTO_EX_INDEX_BIO = 0
 CRYPTO_EX_INDEX_COMP = 14
 CRYPTO_EX_INDEX_DH = 8
@@ -232,5 +228,3 @@ CRYPTO_R_NO_DYNLOCK_CREATE_CALLBACK = 100
 CRYPTO_READ = 4
 CRYPTO_UNLOCK = 2
 CRYPTO_WRITE = 8
-
-return _M

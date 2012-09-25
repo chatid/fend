@@ -1,6 +1,6 @@
 include "sys/types"
 
-require "ffi".cdef [[
+ffi.cdef [[
 extern int access (__const char *__name, int __type) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
 extern int faccessat (int __fd, __const char *__file, int __type, int __flag)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2))) ;

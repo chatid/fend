@@ -3,17 +3,17 @@ local bit = require "bit"
 
 local anl = ffi.load ( "anl" )
 require "fend.common"
-local netdb = include "netdb"
-local signal = include "signal"
+include "netdb"
+include "signal"
 include "string"
 include "arpa.inet"
 
 local function sockaddr_to_string ( sockaddr , addr_len )
-	local host_len = netdb.NI_MAXHOST or 1025
+	local host_len = defines.NI_MAXHOST or 1025
 	local host = ffi.new ( "char[?]" , host_len )
-	local serv_len = netdb.NI_MAXSERV or 32
+	local serv_len = defines.NI_MAXSERV or 32
 	local serv = ffi.new ( "char[?]" , serv_len )
-	local flags = bit.bor ( netdb.NI_NUMERICHOST , netdb.NI_NUMERICSERV )
+	local flags = bit.bor ( defines.NI_NUMERICHOST , defines.NI_NUMERICSERV )
 	local err = ffi.C.getnameinfo ( sockaddr , addr_len , host , host_len , serv , serv_len , flags )
 	if err ~= 0 then
 		error ( ffi.string ( ffi.C.gai_strerror ( err ) ) )
@@ -65,7 +65,7 @@ local signum = ffi.C.__libc_current_sigrtmin()
 local mask = ffi.new ( "sigset_t[1]" )
 ffi.C.sigemptyset ( mask )
 ffi.C.sigaddset ( mask , signum )
-if ffi.C.sigprocmask ( signal.SIG_BLOCK , mask , nil ) ~= 0 then
+if ffi.C.sigprocmask ( defines.SIG_BLOCK , mask , nil ) ~= 0 then
 	error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 end
 
@@ -103,7 +103,7 @@ local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 			end
 		end )
 
-	local err = anl.getaddrinfo_a ( netdb.GAI_NOWAIT , ffi.new ( "struct gaicb*[1]" , {list} ) , items , sigevent )
+	local err = anl.getaddrinfo_a ( defines.GAI_NOWAIT , ffi.new ( "struct gaicb*[1]" , {list} ) , items , sigevent )
 	if err ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( err ) ) )
 	end
@@ -126,7 +126,7 @@ local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 				end
 				epoll_ob:del_signal ( signum , cb_id )
 				return true
-			elseif err == netdb.EAI_AGAIN or err == netdb.EAI_INTR then
+			elseif err == defines.EAI_AGAIN or err == defines.EAI_INTR then
 				return false
 			else
 				error ( ffi.string ( anl.gai_strerror ( err ) ) )

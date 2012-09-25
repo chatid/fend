@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/asn1"
 include "openssl/symhacks"
 include "openssl/bn"
@@ -155,8 +153,6 @@ int ECParameters_print_fp(FILE *fp, const EC_KEY *key);
 int EC_KEY_print_fp(FILE *fp, const EC_KEY *key, int off);
 void ERR_load_EC_strings(void);
 ]]
-
-module ( ... )
 
 EC_F_BN_TO_FELEM = 224
 EC_F_COMPUTE_WNAF = 143
@@ -345,5 +341,3 @@ EC_R_UNKNOWN_ORDER = 114
 EC_R_UNSUPPORTED_FIELD = 131
 EC_R_WRONG_CURVE_PARAMETERS = 145
 EC_R_WRONG_ORDER = 130
-
-return _M

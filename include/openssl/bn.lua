@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/e_os2"
 include "stdio.h"
 include "openssl/ossl_typ"
@@ -260,8 +258,6 @@ int BN_bntest_rand(BIGNUM *rnd, int bits, int top,int bottom);
 void ERR_load_BN_strings(void);
 ]]
 
-module ( ... )
-
 BN_BITS                           = 128
 BN_BITS2                          = 64
 BN_BITS4                          = 32
@@ -342,5 +338,3 @@ BN_R_NOT_INITIALIZED              = 107
 BN_R_P_IS_NOT_PRIME               = 112
 BN_R_TOO_MANY_ITERATIONS          = 113
 BN_R_TOO_MANY_TEMPORARY_VARIABLES = 109
-
-return _M

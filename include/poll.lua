@@ -1,4 +1,4 @@
-require "ffi".cdef [[
+ffi.cdef [[
 typedef unsigned long int nfds_t;
 struct pollfd
   {
@@ -9,8 +9,6 @@ struct pollfd
 
 extern int poll (struct pollfd *__fds, nfds_t __nfds, int __timeout);
 ]]
-
-module ( ... )
 
 POLLIN = 0x001 -- There is data to read.
 POLLPRI = 0x002 -- There is urgent data to read.
@@ -33,5 +31,3 @@ POLLRDHUP = 0x2000
 POLLERR = 0x008 -- Error condition.
 POLLHUP = 0x010 -- Hung up.
 POLLNVAL = 0x020 -- Invalid polling request.
-
-return _M

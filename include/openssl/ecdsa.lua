@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/ec"
 include "openssl/ossl_typ"
 include "openssl/bn"
@@ -40,8 +38,6 @@ void *ECDSA_get_ex_data(EC_KEY *d, int idx);
 void ERR_load_ECDSA_strings(void);
 ]]
 
-module ( ... )
-
 ECDSA_F_ECDSA_CHECK = 104
 ECDSA_F_ECDSA_DATA_NEW_METHOD = 100
 ECDSA_F_ECDSA_DO_SIGN = 101
@@ -55,5 +51,3 @@ ECDSA_R_NEED_NEW_SETUP_VALUES = 106
 ECDSA_R_NON_FIPS_METHOD = 107
 ECDSA_R_RANDOM_NUMBER_GENERATION_FAILED = 104
 ECDSA_R_SIGNATURE_MALLOC_FAILED = 105
-
-return _M

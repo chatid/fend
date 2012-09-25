@@ -1,4 +1,4 @@
-require "ffi".cdef [[
+ffi.cdef [[
 enum
   {
     EPOLL_CLOEXEC = 02000000,
@@ -44,10 +44,6 @@ extern int epoll_pwait (int __epfd, struct epoll_event *__events,
    __const __sigset_t *__ss);
 ]]
 
-module ( ... )
-
 EPOLL_CTL_ADD = 1 ; -- Add a file decriptor to the interface.
 EPOLL_CTL_DEL = 2	; -- Remove a file decriptor from the interface.
 EPOLL_CTL_MOD = 3	; -- Change file decriptor epoll_event structure.
-
-return _M

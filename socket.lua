@@ -1,11 +1,11 @@
 local ffi = require "ffi"
 local new_file = require "fend.file"
 require "fend.common"
+include "errno"
 include "stdio"
-local errors = include "errno"
-local socket = include "sys/socket"
+include "sys/socket"
 include "sys/un"
-local netinet_in = include "netinet/in"
+include "netinet/in"
 include "arpa/inet"
 
 local sock_methods = { }
@@ -38,16 +38,16 @@ end
 local function getsockerr ( file  )
 	local err , err_len = ffi.new ( "int[1]" ) , ffi.new ( "socklen_t[1]" )
 	err_len[0] = ffi.sizeof ( err )
-	if ffi.C.getsockopt ( file:getfd() , socket.SOL_SOCKET , socket.SO_ERROR , err , err_len ) ~= 0 then
+	if ffi.C.getsockopt ( file:getfd() , defines.SOL_SOCKET , defines.SO_ERROR , err , err_len ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	return err[0]
 end
 
 function sock_methods:set_option ( option , val )
-	option = assert ( socket["SO_"..option:upper()] , "Unknown option" )
+	option = assert ( defines["SO_"..option:upper()] , "Unknown option" )
 	val = ffi.new("int[1]",val)
-	if ffi.C.setsockopt ( self:getfd() , socket.SOL_SOCKET , option , val , ffi.sizeof(val) ) == -1 then
+	if ffi.C.setsockopt ( self:getfd() , defines.SOL_SOCKET , option , val , ffi.sizeof(val) ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 end
@@ -106,7 +106,7 @@ function sock_methods:recv ( buff , len , flags )
 		return nil , "EOF"
 	elseif c == -1 then
 		local err = ffi.errno ( )
-		if err == errors.EAGAIN or err == errors.EWOULDBLOCK then
+		if err == defines.EAGAIN or err == defines.EWOULDBLOCK then
 			return 0
 		else
 			return nil , ffi.string ( ffi.C.strerror ( err ) )
@@ -184,7 +184,7 @@ local function new_udp ( domain )
 end
 
 local function new_unix ( dgram )
-	return new ( netinet_in.AF_UNIX , dgram and ffi.C.SOCK_DGRAM or ffi.C.SOCK_STREAM , 0 )
+	return new ( defines.AF_UNIX , dgram and ffi.C.SOCK_DGRAM or ffi.C.SOCK_STREAM , 0 )
 end
 
 return {

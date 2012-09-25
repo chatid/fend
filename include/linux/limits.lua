@@ -1,5 +1,3 @@
-module ( ... )
-
 NR_OPEN        =   1024
 
 NGROUPS_MAX    =  65536 -- supplemental group IDs are available
@@ -15,5 +13,3 @@ XATTR_SIZE_MAX =  65536 -- size of an extended attribute value (64k)
 XATTR_LIST_MAX =  65536 -- size of extended attribute namelist (64k)
 
 RTSIG_MAX      =     32
-
-return _M

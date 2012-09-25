@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/ossl_typ.h"
 
 ffi.cdef [[
@@ -22,13 +20,9 @@ size_t BUF_strlcat(char *dst,const char *src,size_t siz);
 void ERR_load_BUF_strings(void);
 ]]
 
-module ( ... )
-
 BUF_F_BUF_MEM_GROW = 100
 BUF_F_BUF_MEM_GROW_CLEAN = 105
 BUF_F_BUF_MEM_NEW = 101
 BUF_F_BUF_MEMDUP = 103
 BUF_F_BUF_STRDUP = 102
 BUF_F_BUF_STRNDUP = 104
-
-return _M

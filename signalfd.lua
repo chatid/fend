@@ -6,7 +6,7 @@ local new_file = require "fend.file"
 require "fend.common"
 include "stdio"
 include "string"
-local errors = include "errno"
+include "errno"
 include "sys/signalfd"
 
 local sigfiles_to_dispatchers = setmetatable ( { } , { __mode = "kv" } )
@@ -21,7 +21,7 @@ local signal_cb_table = {
 		local r = tonumber ( ffi.C.read ( file:getfd() , info , ffi.sizeof ( info ) ) )
 		if r == -1 then
 			local err = ffi.errno ( )
-			if err == errors.EAGAIN then
+			if err == defines.EAGAIN then
 				return
 			else
 				error ( ffi.string ( ffi.C.strerror ( err ) ) )

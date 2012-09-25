@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/asn1"
 include "openssl/bio"
 include "openssl/crypto"
@@ -174,8 +172,6 @@ RSA *RSAPrivateKey_dup(RSA *rsa);
 void ERR_load_RSA_strings(void);
 ]]
 
-module ( ... )
-
 RSA_3 = 0x3
 RSA_F4 = 0x10001
 RSA_F_CHECK_PADDING_MD = 140
@@ -314,5 +310,3 @@ RSA_R_VALUE_MISSING = 147
 RSA_R_WRONG_SIGNATURE_LENGTH = 119
 RSA_SSLV23_PADDING = 2
 RSA_X931_PADDING = 5
-
-return _M

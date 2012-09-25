@@ -12,6 +12,7 @@ require "fend.common"
 include "stdio"
 include "unistd"
 include "string" -- For strerror
+include "signal"
 local new_file = require "fend.file"
 local dns = require "fend.dns"
 local socket = require "fend.socket"
@@ -109,9 +110,8 @@ do -- Example of writing in coroutine style (connects to echo server)
 end
 
 do -- Capture ^C
-	local signal = include "signal"
 	local mask = ffi.new ( "__sigset_t[1]" )
-	e:add_signal ( signal.SIGINT , function ( siginfo )
+	e:add_signal ( defines.SIGINT , function ( siginfo )
 			if dontquit then
 				dontquit = false
 			else
@@ -119,8 +119,8 @@ do -- Capture ^C
 			end
 		end )
 	ffi.C.sigemptyset ( mask )
-	ffi.C.sigaddset ( mask , signal.SIGINT )
-	if ffi.C.sigprocmask ( signal.SIG_BLOCK , mask , nil ) ~= 0 then
+	ffi.C.sigaddset ( mask , defines.SIGINT )
+	if ffi.C.sigprocmask ( defines.SIG_BLOCK , mask , nil ) ~= 0 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 end

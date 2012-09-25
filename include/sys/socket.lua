@@ -1,6 +1,6 @@
 include "sys/types"
 
-require "ffi".cdef [[
+ffi.cdef [[
 typedef __socklen_t socklen_t;
 enum __socket_type
 {
@@ -127,8 +127,6 @@ extern int sockatmark (int __fd) __attribute__ ((__nothrow__ , __leaf__));
 extern int isfdtype (int __fd, int __fdtype) __attribute__ ((__nothrow__ , __leaf__));
 ]]
 
-module ( ... )
-
 SO_ACCEPTCONN = 30
 SO_ATTACH_FILTER = 26
 SO_BINDTODEVICE = 25
@@ -180,5 +178,3 @@ SOL_SOCKET = 1
 SOL_X25 = 262
 
 SOMAXCONN = 128
-
-return _M

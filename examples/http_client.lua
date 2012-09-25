@@ -14,13 +14,13 @@ local handshake  = require "fend.ssl_handshake".handshake
 local urlparse   = require "socket.url".parse
 local buff_tools = require "fend.buff_tools"
 require "fend.common"
-local netdb = include "netdb"
+include "netdb"
 include "sys/socket"
-local netinet_in = include "netinet/in"
+include "netinet/in"
 
 local hints = ffi.new ( "const struct addrinfo[1]" , { {
-	ai_flags    = bit.bor ( netdb.AI_PASSIVE , netdb.AI_V4MAPPED , netdb.AI_ADDRCONFIG ) ;
-	ai_family   = netinet_in.AF_UNSPEC ;
+	ai_flags    = bit.bor ( defines.AI_PASSIVE , defines.AI_V4MAPPED , defines.AI_ADDRCONFIG ) ;
+	ai_family   = defines.AF_UNSPEC ;
 	ai_socktype = ffi.C.SOCK_STREAM ;
 	ai_protocol = 0 ;
 } } )

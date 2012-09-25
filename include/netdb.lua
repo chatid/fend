@@ -1,6 +1,6 @@
 include "netinet/in"
 
-require "ffi".cdef [[
+ffi.cdef [[
 extern int *__h_errno_location (void) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
 extern void herror (__const char *__str) __attribute__ ((__nothrow__ , __leaf__));
 extern __const char *hstrerror (int __err_num) __attribute__ ((__nothrow__ , __leaf__));
@@ -184,8 +184,6 @@ extern int gai_error (struct gaicb *__req) __attribute__ ((__nothrow__ , __leaf_
 extern int gai_cancel (struct gaicb *__gaicbp) __attribute__ ((__nothrow__ , __leaf__));
 ]]
 
-module ( ... )
-
 GAI_WAIT   = 0
 GAI_NOWAIT = 1
 
@@ -228,5 +226,3 @@ NI_NUMERICSERV = 2
 NI_NOFQDN      = 4
 NI_NAMEREQD    = 8
 NI_DGRAM       = 16
-
-return _M

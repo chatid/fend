@@ -1,6 +1,6 @@
 include "sys/types"
 
-require "ffi".cdef [[
+ffi.cdef [[
 struct _IO_FILE;
 
 typedef struct _IO_FILE FILE;

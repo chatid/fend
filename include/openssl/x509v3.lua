@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/bio"
 include "openssl/x509"
 include "openssl/conf"
@@ -376,8 +374,6 @@ struct stack_st_X509_POLICY_NODE { _STACK stack; };
 void ERR_load_X509V3_strings(void);
 ]]
 
-module ( ... )
-
 X509v3_KU_CRL_SIGN = 0x0002
 X509v3_KU_DATA_ENCIPHERMENT = 0x0010
 X509v3_KU_DECIPHER_ONLY = 0x8000
@@ -388,5 +384,3 @@ X509v3_KU_KEY_CERT_SIGN = 0x0004
 X509v3_KU_KEY_ENCIPHERMENT = 0x0020
 X509v3_KU_NON_REPUDIATION = 0x0040
 X509v3_KU_UNDEF = 0xffff
-
-return _M

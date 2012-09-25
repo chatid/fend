@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "openssl/obj_mac"
 include "openssl/bio"
 include "openssl/asn1"

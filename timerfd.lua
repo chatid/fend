@@ -9,7 +9,7 @@ require "fend.common"
 include "stdio"
 include "string"
 include "sys/timerfd"
-local time = include "time"
+include "time"
 
 local file_to_timer = setmetatable ( { } , { __mode = "k" ; } )
 local timerspec = ffi.new ( "struct itimerspec[1]" )
@@ -65,7 +65,7 @@ local timer_mt = {
 -- cb is the callback to call when the timer fires; it will receive the timer object and the interval; return values from callback change the timer's start and interval
 -- returns a timer object that has methods `set`, `disarm` and `status`
 local function add_timer ( dispatcher , start , interval , cb )
-	local timerfd = ffi.C.timerfd_create ( time.CLOCK_MONOTONIC , bit.bor ( ffi.C.TFD_NONBLOCK ) )
+	local timerfd = ffi.C.timerfd_create ( defines.CLOCK_MONOTONIC , bit.bor ( ffi.C.TFD_NONBLOCK ) )
 	if timerfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end

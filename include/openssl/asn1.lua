@@ -1,5 +1,3 @@
-local ffi = require "ffi"
-
 include "time"
 include "openssl/e_os2"
 include "openssl/bio"
@@ -346,8 +344,6 @@ int SMIME_text(BIO *in, BIO *out);
 void ERR_load_ASN1_strings(void);
 ]]
 
-module ( ... )
-
 ASN1_F_A2D_ASN1_OBJECT = 100
 ASN1_F_A2I_ASN1_ENUMERATED = 101
 ASN1_F_A2I_ASN1_INTEGER = 102
@@ -642,5 +638,3 @@ B_ASN1_UTCTIME = 0x4000
 B_ASN1_UTF8STRING = 0x2000
 B_ASN1_VIDEOTEXSTRING = 0x0008
 B_ASN1_VISIBLESTRING = 0x0040
-
-return _M

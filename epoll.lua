@@ -6,7 +6,8 @@ local ffi = require "ffi"
 local bit = require "bit"
 local new_file = require "fend.file"
 local signalfd = require "fend.signalfd"
-local timerfd = require "fend.timerfd"
+local timerfd  = require "fend.timerfd"
+local inotify  = require "fend.inotify"
 
 require "fend.common"
 include "string"
@@ -39,9 +40,11 @@ local function new_epoll ( guesstimate )
 			wait_size = 0 ;
 			wait_events = nil ;
 			locked = false ;
+
 		} , epoll_mt )
 
 	self.signalfd = signalfd.new ( self ) ;
+	self.inotify  = inotify.new ( self ) ;
 
 	return self
 end
@@ -172,6 +175,7 @@ end
 
 epoll_methods.add_signal = signalfd.add
 epoll_methods.del_signal = signalfd.del
-epoll_methods.add_timer = timerfd.add
+epoll_methods.add_timer  = timerfd.add
+epoll_methods.add_path   = inotify.add
 
 return new_epoll

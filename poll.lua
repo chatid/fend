@@ -1,7 +1,9 @@
 local ffi = require "ffi"
 local bit = require "bit"
 local signalfd = require "fend.signalfd"
-local timerfd = require "fend.timerfd"
+local timerfd  = require "fend.timerfd"
+local inotify  = require "fend.inotify"
+
 require "fend.common"
 include "stdlib"
 include "string"
@@ -34,6 +36,7 @@ local function new ( guesstimate )
 		} , poll_mt )
 
 	self.signalfd = signalfd.new ( self ) ;
+	self.inotify  = inotify.new ( self ) ;
 
 	return self
 end
@@ -147,6 +150,7 @@ end
 
 poll_methods.add_signal = signalfd.add
 poll_methods.del_signal = signalfd.del
-poll_methods.add_timer = timerfd.add
+poll_methods.add_timer  = timerfd.add
+poll_methods.add_path   = inotify.add
 
 return new

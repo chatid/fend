@@ -1,3 +1,4 @@
+local bit = require "bit"
 local ffi = require "ffi"
 
 include "openssl/e_os2"

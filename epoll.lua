@@ -41,7 +41,7 @@ local function new_epoll ( guesstimate )
 			locked = false ;
 		} , epoll_mt )
 
-	signalfd.new ( self )
+	self.signalfd = signalfd.new ( self ) ;
 
 	return self
 end

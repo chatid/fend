@@ -33,7 +33,7 @@ local function new ( guesstimate )
 			allocated = guesstimate ;
 		} , poll_mt )
 
-	signalfd.new ( self )
+	self.signalfd = signalfd.new ( self ) ;
 
 	return self
 end

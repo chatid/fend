@@ -9,14 +9,10 @@ include "string"
 include "errno"
 include "sys/signalfd"
 
-local sigfiles_to_dispatchers = setmetatable ( { } , { __mode = "kv" } )
-local dispatchers_to_data = setmetatable ( { } , { __mode = "k" } )
+local sigfiles_map = setmetatable ( { } , { __mode = "k" } )
 
 local signal_cb_table = {
 	read = function ( file , cbs )
-		local dispatcher = sigfiles_to_dispatchers [ file ]
-		local data = dispatchers_to_data [ dispatcher ]
-
 		local info = ffi.new ( "struct signalfd_siginfo[1]" )
 		local r = tonumber ( ffi.C.read ( file:getfd() , info , ffi.sizeof ( info ) ) )
 		if r == -1 then
@@ -29,8 +25,9 @@ local signal_cb_table = {
 		end
 		assert ( r == ffi.sizeof ( info ) )
 
+		local self = sigfiles_map [ file ]
 		local signum = info[0].ssi_signo
-		for id , cb in pairs ( data.sigcbs [ signum ] ) do
+		for id , cb in pairs ( self.sigcbs [ signum ] ) do
 			cb ( info , id )
 		end
 
@@ -50,14 +47,17 @@ local function new ( dispatcher )
 	end
 	sigfd = new_file ( sigfd )
 
-	sigfiles_to_dispatchers [ sigfd ] = dispatcher
-	dispatchers_to_data [ dispatcher ] = {
+	local self = {
 		sigfile = sigfd ;
 		sigmask = mask ;
 		sigcbs = { } ;
 	}
 
+	sigfiles_map [ sigfd ] = self
+
 	dispatcher:add_fd ( sigfd , signal_cb_table )
+
+	return self
 end
 
 --- Watch for a signal.
@@ -66,20 +66,20 @@ end
 -- cb is the callback to call when a signal arrives; it will receive a `struct signalfd_siginfo[1]` and the watcher's identifier
 -- returns an identifier that should be used to delete the signal later
 local function add_signal ( dispatcher , signum , cb )
-	local data = dispatchers_to_data [ dispatcher ]
-	local cbs = data.sigcbs [ signum ]
+	local self = dispatcher.signalfd
+	local cbs = self.sigcbs [ signum ]
 	if cbs then
 		local n = #cbs + 1
 		cbs [ n ] = cb
 		return n
 	else
 		cbs = { cb }
-		data.sigcbs [ signum ] = cbs
+		self.sigcbs [ signum ] = cbs
 
-		if ffi.C.sigaddset ( data.sigmask , signum ) == -1 then
+		if ffi.C.sigaddset ( self.sigmask , signum ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
-		if ffi.C.signalfd ( data.sigfile:getfd() , data.sigmask , 0 ) == -1 then
+		if ffi.C.signalfd ( self.sigfile:getfd() , self.sigmask , 0 ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
 		return 1
@@ -90,15 +90,15 @@ end
 -- signum is the signal to stop watching
 -- id is the signal id to stop watching (obtained from add_signal)
 local function del_signal ( dispatcher , signum , id )
-	local data = dispatchers_to_data [ dispatcher ]
-	local cbs = data.sigcbs [ signum ]
+	local self = dispatcher.signalfd
+	local cbs = self.sigcbs [ signum ]
 	cbs [ id ] = nil
 	if next ( cbs ) == nil then -- No callbacks left for this signal; remove it from the watched set
-		data.sigcbs [ signum ] = nil
-		if ffi.C.sigdelset ( data.sigmask , signum ) == -1 then
+		self.sigcbs [ signum ] = nil
+		if ffi.C.sigdelset ( self.sigmask , signum ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
-		if ffi.C.signalfd ( data.sigfile:getfd() , data.sigmask , 0 ) == -1 then
+		if ffi.C.signalfd ( self.sigfile:getfd() , self.sigmask , 0 ) == -1 then
 			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 		end
 	end

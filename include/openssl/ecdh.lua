@@ -17,3 +17,15 @@ int ECDH_set_ex_data(EC_KEY *d, int idx, void *arg);
 void *ECDH_get_ex_data(EC_KEY *d, int idx);
 void ERR_load_ECDH_strings(void);
 ]]
+
+module ( ... )
+
+ECDH_F_ECDH_CHECK = 102
+ECDH_F_ECDH_COMPUTE_KEY = 100
+ECDH_F_ECDH_DATA_NEW_METHOD = 101
+ECDH_R_KDF_FAILED = 102
+ECDH_R_NO_PRIVATE_VALUE = 100
+ECDH_R_NON_FIPS_METHOD = 103
+ECDH_R_POINT_ARITHMETIC_FAILURE = 101
+
+return _M

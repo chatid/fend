@@ -68,3 +68,50 @@ int DHparams_print_fp(FILE *fp, const DH *x);
 int DHparams_print(BIO *bp, const DH *x);
 void ERR_load_DH_strings(void);
 ]]
+
+module ( ... )
+
+DH_CHECK_P_NOT_PRIME           = 0x01
+DH_CHECK_P_NOT_SAFE_PRIME      = 0x02
+DH_CHECK_P_NOT_STRONG_PRIME    = DH_CHECK_P_NOT_SAFE_PRIME
+DH_CHECK_PUBKEY_TOO_LARGE      = 0x02
+DH_CHECK_PUBKEY_TOO_SMALL      = 0x01
+DH_F_COMPUTE_KEY               = 102
+DH_F_DH_BUILTIN_GENPARAMS      = 106
+DH_F_DH_COMPUTE_KEY            = 114
+DH_F_DH_GENERATE_KEY           = 115
+DH_F_DH_GENERATE_PARAMETERS_EX = 116
+DH_F_DH_NEW_METHOD             = 105
+DH_F_DH_PARAM_DECODE           = 107
+DH_F_DH_PRIV_DECODE            = 110
+DH_F_DH_PRIV_ENCODE            = 111
+DH_F_DH_PUB_DECODE             = 108
+DH_F_DH_PUB_ENCODE             = 109
+DH_F_DHPARAMS_PRINT_FP         = 101
+DH_F_DO_DH_PRINT               = 100
+DH_F_GENERATE_KEY              = 103
+DH_F_GENERATE_PARAMETERS       = 104
+DH_F_PKEY_DH_DERIVE            = 112
+DH_F_PKEY_DH_KEYGEN            = 113
+DH_FLAG_CACHE_MONT_P           = 0x01
+DH_FLAG_FIPS_METHOD            = 0x0400
+DH_FLAG_NO_EXP_CONSTTIME       = 0x02
+DH_FLAG_NON_FIPS_ALLOW         = 0x0400
+DH_GENERATOR_2                 = 2
+DH_GENERATOR_5                 = 5
+DH_NOT_SUITABLE_GENERATOR      = 0x08
+DH_R_BAD_GENERATOR             = 101
+DH_R_BN_DECODE_ERROR           = 109
+DH_R_BN_ERROR                  = 106
+DH_R_DECODE_ERROR              = 104
+DH_R_INVALID_PUBKEY            = 102
+DH_R_KEY_SIZE_TOO_SMALL        = 110
+DH_R_KEYS_NOT_SET              = 108
+DH_R_MODULUS_TOO_LARGE         = 103
+DH_R_NO_PARAMETERS_SET         = 107
+DH_R_NO_PRIVATE_VALUE          = 100
+DH_R_NON_FIPS_METHOD           = 111
+DH_R_PARAMETER_ENCODING_ERROR  = 105
+DH_UNABLE_TO_CHECK_GENERATOR   = 0x04
+
+return _M

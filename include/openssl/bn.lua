@@ -259,3 +259,88 @@ BIGNUM *get_rfc3526_prime_8192(BIGNUM *bn);
 int BN_bntest_rand(BIGNUM *rnd, int bits, int top,int bottom);
 void ERR_load_BN_strings(void);
 ]]
+
+module ( ... )
+
+BN_BITS                           = 128
+BN_BITS2                          = 64
+BN_BITS4                          = 32
+BN_BLINDING_NO_RECREATE           = 0x00000002
+BN_BLINDING_NO_UPDATE             = 0x00000001
+BN_BYTES                          = 8
+BN_DEC_CONV                       = 10000000000000000000
+BN_DEC_FMT1                       = "%lu"
+BN_DEC_FMT2                       = "%019lu"
+BN_DEC_NUM                        = 19
+BN_DEFAULT_BITS                   = 1280
+BN_F_BN_BLINDING_CONVERT_EX       = 100
+BN_F_BN_BLINDING_CREATE_PARAM     = 128
+BN_F_BN_BLINDING_INVERT_EX        = 101
+BN_F_BN_BLINDING_NEW              = 102
+BN_F_BN_BLINDING_UPDATE           = 103
+BN_F_BN_BN2DEC                    = 104
+BN_F_BN_BN2HEX                    = 105
+BN_F_BN_CTX_GET                   = 116
+BN_F_BN_CTX_NEW                   = 106
+BN_F_BN_CTX_START                 = 129
+BN_F_BN_DIV                       = 107
+BN_F_BN_DIV_NO_BRANCH             = 138
+BN_F_BN_DIV_RECP                  = 130
+BN_F_BN_EXP                       = 123
+BN_F_BN_EXPAND2                   = 108
+BN_F_BN_EXPAND_INTERNAL           = 120
+BN_F_BN_GF2M_MOD                  = 131
+BN_F_BN_GF2M_MOD_EXP              = 132
+BN_F_BN_GF2M_MOD_MUL              = 133
+BN_F_BN_GF2M_MOD_SOLVE_QUAD       = 134
+BN_F_BN_GF2M_MOD_SOLVE_QUAD_ARR   = 135
+BN_F_BN_GF2M_MOD_SQR              = 136
+BN_F_BN_GF2M_MOD_SQRT             = 137
+BN_F_BN_MOD_EXP2_MONT             = 118
+BN_F_BN_MOD_EXP_MONT              = 109
+BN_F_BN_MOD_EXP_MONT_CONSTTIME    = 124
+BN_F_BN_MOD_EXP_MONT_WORD         = 117
+BN_F_BN_MOD_EXP_RECP              = 125
+BN_F_BN_MOD_EXP_SIMPLE            = 126
+BN_F_BN_MOD_INVERSE               = 110
+BN_F_BN_MOD_INVERSE_NO_BRANCH     = 139
+BN_F_BN_MOD_LSHIFT_QUICK          = 119
+BN_F_BN_MOD_MUL_RECIPROCAL        = 111
+BN_F_BN_MOD_SQRT                  = 121
+BN_F_BN_MPI2BN                    = 112
+BN_F_BN_NEW                       = 113
+BN_F_BN_RAND                      = 114
+BN_F_BN_RAND_RANGE                = 122
+BN_F_BN_USUB                      = 115
+BN_F_BNRAND                       = 127
+BN_FLG_CONSTTIME                  = 0x04
+BN_FLG_EXP_CONSTTIME              = BN_FLG_CONSTTIME
+BN_FLG_FREE                       = 0x8000
+BN_FLG_MALLOCED                   = 0x01
+BN_FLG_STATIC_DATA                = 0x02
+BN_HEX_FMT1                       = "%lX"
+BN_HEX_FMT2                       = "%016lX"
+BN_LONG                           = long
+BN_MASK                           = (0xffffffffffffffffffffffffffffffff)
+BN_MASK2                          = (0xffffffffffffffff)
+BN_MASK2h                         = (0xffffffff00000000)
+BN_MASK2h1                        = (0xffffffff80000000)
+BN_MASK2l                         = (0xffffffff)
+BN_R_ARG2_LT_ARG3                 = 100
+BN_R_BAD_RECIPROCAL               = 101
+BN_R_BIGNUM_TOO_LONG              = 114
+BN_R_CALLED_WITH_EVEN_MODULUS     = 102
+BN_R_DIV_BY_ZERO                  = 103
+BN_R_EXPAND_ON_STATIC_BIGNUM_DATA = 105
+BN_R_INPUT_NOT_REDUCED            = 110
+BN_R_INVALID_LENGTH               = 106
+BN_R_INVALID_RANGE                = 115
+BN_R_NO_INVERSE                   = 108
+BN_R_NO_SOLUTION                  = 116
+BN_R_NOT_A_SQUARE                 = 111
+BN_R_NOT_INITIALIZED              = 107
+BN_R_P_IS_NOT_PRIME               = 112
+BN_R_TOO_MANY_ITERATIONS          = 113
+BN_R_TOO_MANY_TEMPORARY_VARIABLES = 109
+
+return _M

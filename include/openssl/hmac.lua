@@ -26,3 +26,9 @@ unsigned char *HMAC(const EVP_MD *evp_md, const void *key, int key_len,
 int HMAC_CTX_copy(HMAC_CTX *dctx, HMAC_CTX *sctx);
 void HMAC_CTX_set_flags(HMAC_CTX *ctx, unsigned long flags);
 ]]
+
+module ( ... )
+
+HMAC_MAX_MD_CBLOCK = 128
+
+return _M

@@ -258,3 +258,144 @@ AF_ALG = PF_ALG
 
 INET6_ADDRSTRLEN = 46
 INET_ADDRSTRLEN = 16
+
+--[[ Options for use with `getsockopt' and `setsockopt' at the IP level.
+   The first word in the comment at the right is the data type used;
+   "bool" means a boolean value stored in an `int'.]]
+IP_OPTIONS                = 4 -- ip_opts; IP per-packet options.
+IP_HDRINCL                = 3 -- int; Header is included with data.
+IP_TOS                    = 1 -- int; IP type of service and precedence.
+IP_TTL                    = 2 -- int; IP time to live.
+IP_RECVOPTS               = 6 -- bool; Receive all IP options w/datagram.
+-- For BSD compatibility.
+IP_RETOPTS                = 7 -- ip_opts; Set/get IP per-packet options.
+IP_RECVRETOPTS            = IP_RETOPTS -- bool; Receive IP options for response.
+IP_MULTICAST_IF           = 32 -- in_addr; set/get IP multicast i/f
+IP_MULTICAST_TTL          = 33 -- u_char; set/get IP multicast ttl
+IP_MULTICAST_LOOP         = 34 -- i_char; set/get IP multicast loopback
+IP_ADD_MEMBERSHIP         = 35 -- ip_mreq; add an IP group membership
+IP_DROP_MEMBERSHIP        = 36 -- ip_mreq; drop an IP group membership
+IP_UNBLOCK_SOURCE         = 37 -- ip_mreq_source: unblock data from source
+IP_BLOCK_SOURCE           = 38 -- ip_mreq_source: block data from source
+IP_ADD_SOURCE_MEMBERSHIP  = 39 -- ip_mreq_source: join source group
+IP_DROP_SOURCE_MEMBERSHIP = 40 -- ip_mreq_source: leave source group
+IP_MSFILTER               = 41
+
+
+MCAST_JOIN_GROUP          = 42  -- group_req: join any-source group
+MCAST_BLOCK_SOURCE        = 43  -- group_source_req: block from given group
+MCAST_UNBLOCK_SOURCE      = 44 -- group_source_req: unblock from given group
+MCAST_LEAVE_GROUP         = 45 -- group_req: leave any-source group
+MCAST_JOIN_SOURCE_GROUP   = 46 -- group_source_req: join source-spec gr
+MCAST_LEAVE_SOURCE_GROUP  = 47 -- group_source_req: leave source-spec gr
+MCAST_MSFILTER            = 48
+IP_MULTICAST_ALL          = 49
+IP_UNICAST_IF             = 50
+
+MCAST_EXCLUDE             = 0
+MCAST_INCLUDE       = 1
+
+IP_ROUTER_ALERT     = 5 -- bool
+IP_PKTINFO          = 8 -- bool
+IP_PKTOPTIONS       = 9
+IP_PMTUDISC         = 10 -- obsolete name?
+IP_MTU_DISCOVER     = 10 -- int; see below
+IP_RECVERR          = 11 -- bool
+IP_RECVTTL          = 12 -- bool
+IP_RECVTOS          = 13 -- bool
+IP_MTU              = 14 -- int
+IP_FREEBIND         = 15
+IP_IPSEC_POLICY     = 16
+IP_XFRM_POLICY      = 17
+IP_PASSSEC          = 18
+IP_TRANSPARENT      = 19
+IP_MULTICAST_ALL    = 49 -- bool
+
+-- TProxy original addresses
+IP_ORIGDSTADDR      = 20
+IP_IRECVORIGDSTADDR = IP_ORIGDSTADD
+
+IP_MINTTL           = 2
+
+-- IP_MTU_DISCOVER arguments.
+IP_PMTUDISC_DONT  = 0 -- Never send DF frames.
+IP_PMTUDISC_WANT  = 1 -- Use per route hints.
+IP_PMTUDISC_DO    = 2 -- Always DF.
+IP_PMTUDISC_PROBE = 3 -- Ignore dst pmtu.
+
+-- To select the IP level.
+SOL_IP = 0
+
+IP_DEFAULT_MULTICAST_TTL  = 1
+IP_DEFAULT_MULTICAST_LOOP = 1
+IP_MAX_MEMBERSHIPS        = 20
+
+
+--[[ Options for use with `getsockopt' and `setsockopt' at the IPv6 level.
+   The first word in the comment at the right is the data type used;
+   "bool" means a boolean value stored in an `int'.]]
+IPV6_ADDRFORM        = 1
+IPV6_2292PKTINFO     = 2
+IPV6_2292HOPOPTS     = 3
+IPV6_2292DSTOPTS     = 4
+IPV6_2292RTHDR       = 5
+IPV6_2292PKTOPTIONS  = 6
+IPV6_CHECKSUM        = 7
+IPV6_2292HOPLIMIT    = 8
+
+SCM_SRCRT            = IPV6_RXSRCRT -- Undefined???
+
+IPV6_NEXTHOP         = 9
+IPV6_AUTHHDR         = 10
+IPV6_UNICAST_HOPS    = 16
+IPV6_MULTICAST_IF    = 17
+IPV6_MULTICAST_HOPS  = 18
+IPV6_MULTICAST_LOOP  = 19
+IPV6_JOIN_GROUP      = 20
+IPV6_LEAVE_GROUP     = 21
+IPV6_ROUTER_ALERT    = 22
+IPV6_MTU_DISCOVER    = 23
+IPV6_MTU             = 24
+IPV6_RECVERR         = 25
+IPV6_V6ONLY          = 26
+IPV6_JOIN_ANYCAST    = 27
+IPV6_LEAVE_ANYCAST   = 28
+IPV6_IPSEC_POLICY    = 34
+IPV6_XFRM_POLICY     = 35
+
+IPV6_RECVPKTINFO     = 49
+IPV6_PKTINFO         = 50
+IPV6_RECVHOPLIMIT    = 51
+IPV6_HOPLIMIT        = 52
+IPV6_RECVHOPOPTS     = 53
+IPV6_HOPOPTS         = 54
+IPV6_RTHDRDSTOPTS    = 55
+IPV6_RECVRTHDR       = 56
+IPV6_RTHDR           = 57
+IPV6_RECVDSTOPTS     = 58
+IPV6_DSTOPTS         = 59
+
+IPV6_RECVTCLASS      = 66
+IPV6_TCLASS          = 67
+
+-- Obsolete synonyms for the above.
+IPV6_ADD_MEMBERSHIP  = IPV6_JOIN_GROUP
+IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP
+IPV6_RXHOPOPTS       = IPV6_HOPOPTS
+IPV6_RXDSTOPTS       = IPV6_DSTOPTS
+
+-- IPV6_MTU_DISCOVER values.
+IPV6_PMTUDISC_DONT   = 0 -- Never send DF frames.
+IPV6_PMTUDISC_WANT   = 1 -- Use per route hints.
+IPV6_PMTUDISC_DO     = 2 -- Always DF.
+IPV6_PMTUDISC_PROBE  = 3 -- Ignore dst pmtu.
+
+-- Socket level values for IPv6.
+SOL_IPV6             = 41
+SOL_ICMPV6           = 58
+
+-- Routing header options for IPv6.
+IPV6_RTHDR_LOOSE     = 0 -- Hop doesn't need to be neighbour.
+IPV6_RTHDR_STRICT    = 1 -- Hop must be a neighbour.
+
+IPV6_RTHDR_TYPE_0    = 0 -- IPv6 Routing header type 0.

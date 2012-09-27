@@ -46,8 +46,14 @@ A non-blocking luasocket-like interface
  - `sock:getfd ( )`  
  	Shortcut for `sock:getfile():getfd()`
 
- - `sock:set_option ( option , val )`  
- 	Calls `setsockopt` with the given option (a string, eg `"REUSEADDR"`) and `int` val
+ - `sock:set_option ( level , option , val , size )`  
+ 	Calls `setsockopt` with the given parameters  
+ 	if `val` is a number or boolean it will be converted to an int  
+ 	`size` is optional, if not passed will be `sizeof(val)`
+
+ - `sock:set_socket_option ( option , val , size )`  
+ 	Looks up the string `option` and calls `sock:set_option`  
+ 	eg, `option = "REUSEADDR"`
 
  - `sock:bind ( addrinfo )`  
 	`sock:bind ( sockaddr , sockaddr_len )`  

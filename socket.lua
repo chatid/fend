@@ -44,12 +44,22 @@ local function getsockerr ( file  )
 	return err[0]
 end
 
-function sock_methods:set_option ( option , val )
-	option = assert ( defines["SO_"..option:upper()] , "Unknown option" )
-	val = ffi.new("int[1]",val)
-	if ffi.C.setsockopt ( self:getfd() , defines.SOL_SOCKET , option , val , ffi.sizeof(val) ) == -1 then
+function sock_methods:set_option ( level , option , val , size )
+	if type ( val ) == "boolean" or type ( val ) == "number" then
+		val  = ffi.new ( "int[1]" ,val )
+		size = ffi.sizeof ( val )
+	else
+		assert ( val ~= nil , "Invalid value" )
+		size = size or ffi.sizeof ( val )
+	end
+	if ffi.C.setsockopt ( self:getfd() , level , option , val , size ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
+end
+
+function sock_methods:set_socket_option ( option , ... )
+	option = assert ( defines["SO_"..option:upper()] , "Unknown option" )
+	return self:set_option ( defines.SOL_SOCKET , option , ... )
 end
 
 function sock_methods:bind ( ... )

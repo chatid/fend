@@ -110,10 +110,10 @@ local function event_string(events)
 end
 
 --- Wait for a number of events and call their callbacks.
--- Raising an error in a callback will propagate through, leaving the dispatch operation locked.
 -- max_events (optional) is the number of events to wait for. Defaults to 1.
 -- timeout (optional) is the maximum time to wait for an event before returning. Default is to wait forever
-function epoll_methods:dispatch ( max_events , timeout )
+-- onerror (optional) is a function to call on a non-handled error, receives `( file , cbs , err , eventtype )`
+function epoll_methods:dispatch ( max_events , timeout , onerror )
 	if self.locked then error ( "dispatch already running, call :remove_lock() to recover" ) end
 	self.locked = true
 	max_events = max_events or 1
@@ -147,29 +147,47 @@ function epoll_methods:dispatch ( max_events , timeout )
 		end
 		if bit.band ( events , ffi.C.EPOLLIN ) ~= 0 then
 			if cbs.read then
-				cbs.read ( file , cbs , "read" )
+				local ok , err = pcall ( cbs.read , file , cbs , "read" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "read" ) == false ) then
+					error ( err )
+				end
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
 			if cbs.error then
-				cbs.error ( file , cbs , "error" )
+				local ok , err = pcall ( cbs.error , file , cbs , "error" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "error" ) == false ) then
+					error ( err )
+				end
 			end
 		elseif bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
 			if cbs.write then
-				cbs.write ( file , cbs , "write" )
+				local ok , err = pcall ( cbs.write , file , cbs , "write" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+					error ( err )
+				end
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then
 			if cbs.close then
-				cbs.close ( file , cbs , "close" )
+				local ok , err = pcall ( cbs.close , file , cbs , "close" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "close" ) == false ) then
+					error ( err )
+				end
 			else
 				self:del_fd ( file , cbs )
 			end
 		elseif bit.band ( events , ffi.C.EPOLLRDHUP ) ~= 0 then
 			if cbs.rdclose then
-				cbs.rdclose ( file , cbs , "rdclose" )
+				local ok , err = pcall ( cbs.rdclose , file , cbs , "rdclose" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "rdclose" ) == false ) then
+					error ( err )
+				end
 			elseif cbs.close then
-				cbs.close ( file , cbs , "close" )
+				local ok , err = pcall ( cbs.close , file , cbs , "close" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "close" ) == false ) then
+					error ( err )
+				end
 			else
 				self:del_fd ( file , cbs )
 			end

@@ -44,7 +44,7 @@ end
 function poll_methods:remove_lock ( )
 end
 
-function poll_methods:dispatch ( max_events , timeout )
+function poll_methods:dispatch ( max_events , timeout , onerror )
 	if timeout then
 		timeout = timeout * 1000
 	else
@@ -75,29 +75,47 @@ function poll_methods:dispatch ( max_events , timeout )
 		end
 		if bit.band ( revents , defines.POLLIN ) ~= 0 then
 			if cbs.read then
-				cbs.read ( file , cbs , "read" )
+				local ok , err = pcall ( cbs.read , file , cbs , "write" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+					error ( err )
+				end
 			end
 		end
 		if bit.band ( revents , defines.POLLERR ) ~= 0 then
 			if cbs.error then
-				cbs.error ( file , cbs , "error" )
+				local ok , err = pcall ( cbs.error , file , cbs , "write" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+					error ( err )
+				end
 			end
 		elseif bit.band ( revents , defines.POLLOUT ) ~= 0 then -- "This event and POLLOUT are mutually-exclusive; a stream can never be writable if a hangup has occurred."
 			if cbs.write then
-				cbs.write ( file , cbs , "write" )
+				local ok , err = pcall ( cbs.write , file , cbs , "write" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+					error ( err )
+				end
 			end
 		end
 		if bit.band ( revents , defines.POLLHUP ) ~= 0 then
 			if cbs.close then
-				cbs.close ( file , cbs , "close" )
+				local ok , err = pcall ( cbs.close , file , cbs , "write" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+					error ( err )
+				end
 			else
 				self:del_fd ( file , cbs )
 			end
 		elseif bit.band ( revents , defines.POLLRDHUP ) ~= 0 then
 			if cbs.rdclose then
-				cbs.rdclose ( file , cbs , "rdclose" )
+				local ok , err = pcall ( cbs.rdclose , file , cbs , "write" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+					error ( err )
+				end
 			elseif cbs.close then
-				cbs.close ( file , cbs , "close" )
+				local ok , err = pcall ( cbs.close , file , cbs , "write" )
+				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+					error ( err )
+				end
 			else
 				self:del_fd ( file , cbs )
 			end

@@ -150,14 +150,13 @@ function epoll_methods:dispatch ( max_events , timeout )
 				cbs.read ( file , cbs , "read" )
 			end
 		end
-		if bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
-			if cbs.write then
-				cbs.write ( file , cbs , "write" )
-			end
-		end
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
 			if cbs.error then
 				cbs.error ( file , cbs , "error" )
+			end
+		elseif bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
+			if cbs.write then
+				cbs.write ( file , cbs , "write" )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then

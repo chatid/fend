@@ -263,10 +263,6 @@ function ssl_methods:shutdown ( )
 end
 ssl_methods._shutdown = ssl_methods.shutdown
 
-function ssl_methods:close ( )
-	original_socks [ self ]:close ( )
-end
-
 ffi.metatype ( "SSL" , {
 	__index = ssl_methods ;
 	__gc = function ( self )

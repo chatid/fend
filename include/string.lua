@@ -1,3 +1,5 @@
+include "xlocale"
+
 ffi.cdef [[
 extern void *memcpy (void *__restrict __dest,
        __const void *__restrict __src, size_t __n)
@@ -35,15 +37,6 @@ extern size_t strxfrm (char *__restrict __dest,
          __const char *__restrict __src, size_t __n)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2)));
 
-typedef struct __locale_struct
-{
-  struct __locale_data *__locales[13];
-  const unsigned short int *__ctype_b;
-  const int *__ctype_tolower;
-  const int *__ctype_toupper;
-  const char *__names[13];
-} *__locale_t;
-typedef __locale_t locale_t;
 extern int strcoll_l (__const char *__s1, __const char *__s2, __locale_t __l)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 3)));
 extern size_t strxfrm_l (char *__dest, __const char *__src, size_t __n,

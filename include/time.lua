@@ -1,3 +1,4 @@
+include "xlocale"
 include "sys/types"
 
 ffi.cdef [[

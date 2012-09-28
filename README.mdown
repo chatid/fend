@@ -55,6 +55,10 @@ A non-blocking luasocket-like interface
  	Looks up the string `option` and calls `sock:set_option`  
  	eg, `option = "REUSEADDR"`
 
+ - `error_string , errno = sock:get_error ( )`
+ 	Retrives the error on the socket
+ 	Returns `nil` if there is no error
+
  - `sock:bind ( addrinfo )`  
 	`sock:bind ( sockaddr , sockaddr_len )`  
 	Binds the socket to the interface given in `addrinfo` or `sockaddr , sockaddr_len`

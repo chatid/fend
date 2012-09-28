@@ -3,6 +3,7 @@ local new_file = require "fend.file"
 require "fend.common"
 include "errno"
 include "stdio"
+include "string"
 include "sys/socket"
 include "sys/un"
 include "netinet/in"
@@ -42,6 +43,15 @@ local function getsockerr ( file  )
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end
 	return err[0]
+end
+
+function sock_methods:get_error ( )
+	local err = getsockerr ( self:getfile ( ) )
+	if err == 0 then
+		return nil
+	else
+		return ffi.string ( ffi.C.strerror ( err ) ) , err
+	end
 end
 
 function sock_methods:set_option ( level , option , val , size )

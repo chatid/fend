@@ -109,6 +109,36 @@ do -- Example of writing in coroutine style (connects to echo server)
 	socket.new_tcp ( addrinfo.ai_family ):connect ( addrinfo , e , go )
 end
 
+-- read_line
+local sock = socket.new_tcp ( addrinfo.ai_family )
+sock:connect ( addrinfo , e , function ( sock , err )
+		assert ( sock , err )
+		sock:write(str,#str,e,function(sock,err)
+				assert ( sock , err )
+
+				e:add_fd ( sock:getfile() , {
+					read = function ( file , cbs )
+						local c , err , p , pl = require "fend.examples.read".read_line ( sock )
+						if not c then
+							e:del_fd ( file )
+							print(c,err,p,pl)
+							error ( "Partial result" )
+							return
+						end
+						local buff , len = c , err
+						local str2 = ffi.string(buff,len)
+						assert ( str==str2 , "Echo not same as sent" )
+						print("Confirmed Echo (read_line)")
+						sock:close()
+					end ;
+					error = function ( file , cbs )
+						error ( "readline client failure" )
+					end ;
+				} )
+			end )
+	end )
+
+
 do -- Capture ^C
 	local mask = ffi.new ( "__sigset_t[1]" )
 	e:add_signal ( defines.SIGINT , function ( siginfo )

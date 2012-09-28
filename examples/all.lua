@@ -63,25 +63,25 @@ local t2 = e:add_timer ( 1 , 0.1 , function ( timer , n )
 
 -- Get address for echo server
 math.randomseed ( os.time() )
-local port = math.random(49192,65535)
-local addrinfo = dns.lookup("*",port)
+local port = math.random ( 49192 , 65535 )
+local addrinfo = dns.lookup ( "*" , port )
 
 -- Create the server
-local echo_serv = require"fend.examples.echo"(e,addrinfo,16)
+local echo_serv = require"fend.examples.echo" ( e , addrinfo , 16 )
 print("Listening on " .. port )
 
 -- Connect to the echo server
-local str = "hi"
+local str = "hi\n"
 local sock = socket.new_tcp ( addrinfo.ai_family )
 sock:connect ( addrinfo , e , function ( sock , err )
 		assert ( sock , err )
-		sock:write(str,#str,e,function(sock,err)
+		sock:write(str,#str,e,function ( sock , err )
 				assert ( sock , err )
 				sock:read ( nil , #str , e , function ( sock , buff , len )
-						local str2 = ffi.string(buff,len)
+						local str2 = ffi.string ( buff , len )
 						assert ( str==str2 , "Echo not same as sent" )
-						print("Confirmed Echo (callback)")
-						sock:close()
+						print ( "Confirmed Echo (callback)" )
+						sock:close ( )
 					end )
 			end )
 	end )

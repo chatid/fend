@@ -137,7 +137,11 @@ end
 function poll_methods:del_fd ( file )
 	local fd = file:getfd()
 
-	local index = assert ( self.map [ fd ] , "File not watched" ).index
+	local m = self.map [ fd ]
+	if m == nil then
+		return
+	end
+	local index = m.index
 	self.map [ fd ] = nil
 	self.nfds = self.nfds - 1
 	if index ~= self.nfds then -- If not last item, move an item from end of list to fill the empty spot

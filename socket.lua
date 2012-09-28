@@ -28,11 +28,11 @@ function sock_methods:getfile ( )
 end
 
 function sock_methods:getfd ( )
-	return self.file:getfd ( )
+	return self:getfile ( ):getfd ( )
 end
 
 function sock_methods:close ( )
-	self.file:close ( )
+	return self:getfile ( ):close ( )
 end
 
 local function getsockerr ( file  )
@@ -94,7 +94,7 @@ function sock_methods:accept ( with_sockaddr )
 	end
 	local client = new_sock ( new_file ( clientfd ) , self.type )
 	client.connected = true
-	client.file:set_blocking ( false )
+	client:getfile ( ):set_blocking ( false )
 	if with_sockaddr then
 		return client , sockaddr , sockaddr_len[0]
 	else
@@ -206,7 +206,7 @@ local function new ( ... )
 	local proto = ffi.C.getprotobynumber ( protocol )
 	assert ( proto ~= ffi.NULL , "Unable to look up protocol" )
 	local sock = new_sock ( new_file ( fd ) , ffi.string ( proto.p_name ) )
-	sock.file:set_blocking ( false )
+	sock:getfile ( ):set_blocking ( false )
 	return sock
 end
 

@@ -34,7 +34,11 @@ function sock_methods:connect ( ... )
 				self.connected = true
 				cb ( self )
 			end ;
-			oneshot = true
+			error = function ( file )
+				local err = ffi.string ( ffi.C.strerror ( getsockerr ( file ) ) )
+				cb ( nil , err )
+			end ;
+			oneshot = true ;
 		} )
 end
 

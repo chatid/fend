@@ -34,8 +34,8 @@ e:add_fd ( stdin , {
 		local str = ffi.string(buff,c)
 		if str:match("^quit%s") then dontquit = false end
 	end ;
-	close = function ( file )
-		e:del_fd ( file )
+	error = function ( file , cbs )
+		error ( "stdin failure" )
 	end ;
 } )
 

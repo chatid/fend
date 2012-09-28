@@ -33,6 +33,12 @@ local signal_cb_table = {
 
 		return cbs.read ( file , cbs ) -- Call self until EAGAIN
 	end ;
+	close = function ( file , cbs )
+		error ( "signalfd closed" )
+	end ;
+	error = function ( file , cbs )
+		error ( "signalfd error" )
+	end ;
 	edge = true ;
 }
 

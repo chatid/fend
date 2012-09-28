@@ -90,6 +90,12 @@ local i_cb_table = {
 
 		return read_cbs.read ( file , read_cbs ) -- Call self until EAGAIN
 	end ;
+	close = function ( file , cbs )
+		error ( "inotify closed" )
+	end ;
+	error = function ( file , cbs )
+		error ( "inotify error" )
+	end ;
 	edge = true ;
 }
 

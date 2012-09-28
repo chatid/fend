@@ -61,7 +61,16 @@ return function ( e , addrinfo , len )
 					client:close ( )
 				end
 
-				e:add_fd ( client:getfile() , { read = read , close = close } )
+				e:add_fd ( client:getfile() , {
+						read  = read ;
+						close = close ;
+						error = function ( file , cbs )
+							error ( "error in echo connection" )
+						end
+					} )
+			end ;
+			error = function ( file , cbs )
+				error ( "echo server failure" )
 			end ;
 		} )
 

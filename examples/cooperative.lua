@@ -15,6 +15,7 @@ local function handle_resume ( self , ok , ... )
 				oneshot = true ;
 				edge = true ;
 				close = self.cb_handler ;
+				error = self.cb_handler ;
 				[ want ] = self.cb_handler ;
 			} )
 	elseif co_status ( self.co ) == "dead" then -- Finished

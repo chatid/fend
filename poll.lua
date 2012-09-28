@@ -82,11 +82,9 @@ function poll_methods:dispatch ( max_events , timeout , onerror )
 			end
 		end
 		if bit.band ( revents , defines.POLLERR ) ~= 0 then
-			if cbs.error then
-				local ok , err = pcall ( cbs.error , file , cbs , "write" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
-					error ( err )
-				end
+			local ok , err = pcall ( cbs.error , file , cbs , "write" )
+			if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+				error ( err )
 			end
 		elseif bit.band ( revents , defines.POLLOUT ) ~= 0 then -- "This event and POLLOUT are mutually-exclusive; a stream can never be writable if a hangup has occurred."
 			if cbs.write then
@@ -125,7 +123,7 @@ end
 
 function poll_methods:add_fd ( file , cbs )
 	local fd = file:getfd()
-
+	assert ( cbs.error , "No error callback" )
 	local info = self.map [ fd ]
 	if info then
 		info.cbs = cbs

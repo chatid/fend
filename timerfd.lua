@@ -29,6 +29,12 @@ local timer_cbs = {
 			timer:disarm ( )
 		end
 	end ;
+	close = function ( file , cbs )
+		error ( "timerfd closed" )
+	end ;
+	error = function ( file , cbs )
+		error ( "timerfd error" )
+	end ;
 	edge = true ;
 }
 local timer_mt = {

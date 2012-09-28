@@ -51,9 +51,10 @@ end
 
 --- Add a file descriptor to be watched.
 -- fd is the file descriptor to watch
--- cbs is a table of callbacks, the events to watch for are selected based on the callbacks given
+-- cbs is a table of callbacks, the events to watch for are selected based on the callbacks given; it must contain an 'error' callback
 function epoll_methods:add_fd ( file , cbs )
 	local fd = file:getfd()
+	assert ( cbs.error , "No error callback" )
 	local op
 	if self.registered [ file ] then
 		op = defines.EPOLL_CTL_MOD
@@ -154,11 +155,9 @@ function epoll_methods:dispatch ( max_events , timeout , onerror )
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
-			if cbs.error then
-				local ok , err = pcall ( cbs.error , file , cbs , "error" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "error" ) == false ) then
-					error ( err )
-				end
+			local ok , err = xpcall ( cbs.error , debug.traceback , file , cbs , "error" )
+			if not ok and onerror ( self , file , cbs , err , "error" ) == false then
+				error ( err )
 			end
 		elseif bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
 			if cbs.write then

@@ -231,6 +231,9 @@ local function request ( url , options , e , cb )
 					e:del_fd ( file , cbs )
 					sock:close ( )
 				end ;
+				error = function ( file , cbs )
+					error ( "error in http client" )
+				end ;
 				edge = true ;
 			} )
 	end

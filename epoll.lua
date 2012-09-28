@@ -110,10 +110,17 @@ local function event_string(events)
 	return table.concat(t,",")
 end
 
+local function default_onerror ( self , file , cbs , err , eventtype )
+	self:del_fd ( file )
+	pcall ( file.close , file )
+	return false
+end
+
 --- Wait for a number of events and call their callbacks.
 -- max_events (optional) is the number of events to wait for. Defaults to 1.
 -- timeout (optional) is the maximum time to wait for an event before returning. Default is to wait forever
--- onerror (optional) is a function to call on a non-handled error, receives `( file , cbs , err , eventtype )`
+-- onerror (optional) is a function to call on an unhandled error, receives `( self , file , cbs , err , eventtype )`
+--     the defaut onerror removes the file from the dispatcher and tries to close the file.
 function epoll_methods:dispatch ( max_events , timeout , onerror )
 	if self.locked then error ( "dispatch already running, call :remove_lock() to recover" ) end
 	self.locked = true
@@ -127,6 +134,7 @@ function epoll_methods:dispatch ( max_events , timeout , onerror )
 	else
 		timeout = -1
 	end
+	onerror = onerror or default_onerror
 	local n = ffi.C.epoll_wait ( self.epfile:getfd() , self.wait_events , max_events , timeout )
 	if n == -1 then
 		self.locked = false
@@ -149,20 +157,20 @@ function epoll_methods:dispatch ( max_events , timeout , onerror )
 		if bit.band ( events , ffi.C.EPOLLIN ) ~= 0 then
 			if cbs.read then
 				local ok , err = pcall ( cbs.read , file , cbs , "read" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "read" ) == false ) then
+				if not ok and onerror ( self , file , cbs , err , "read" ) == false then
 					error ( err )
 				end
 			end
 		end
 		if bit.band ( events , ffi.C.EPOLLERR ) ~= 0 then
-			local ok , err = xpcall ( cbs.error , debug.traceback , file , cbs , "error" )
+			local ok , err = pcall ( cbs.error , file , cbs , "error" )
 			if not ok and onerror ( self , file , cbs , err , "error" ) == false then
 				error ( err )
 			end
 		elseif bit.band ( events , ffi.C.EPOLLOUT ) ~= 0 then
 			if cbs.write then
 				local ok , err = pcall ( cbs.write , file , cbs , "write" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+				if not ok and onerror ( self , file , cbs , err , "write" ) == false then
 					error ( err )
 				end
 			end
@@ -170,7 +178,7 @@ function epoll_methods:dispatch ( max_events , timeout , onerror )
 		if bit.band ( events , ffi.C.EPOLLHUP ) ~= 0 then
 			if cbs.close then
 				local ok , err = pcall ( cbs.close , file , cbs , "close" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "close" ) == false ) then
+				if not ok and onerror ( self , file , cbs , err , "close" ) == false then
 					error ( err )
 				end
 			else
@@ -179,12 +187,12 @@ function epoll_methods:dispatch ( max_events , timeout , onerror )
 		elseif bit.band ( events , ffi.C.EPOLLRDHUP ) ~= 0 then
 			if cbs.rdclose then
 				local ok , err = pcall ( cbs.rdclose , file , cbs , "rdclose" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "rdclose" ) == false ) then
+				if not ok and onerror ( self , file , cbs , err , "rdclose" ) == false then
 					error ( err )
 				end
 			elseif cbs.close then
 				local ok , err = pcall ( cbs.close , file , cbs , "close" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "close" ) == false ) then
+				if not ok and onerror ( self , file , cbs , err , "close" ) == false then
 					error ( err )
 				end
 			else

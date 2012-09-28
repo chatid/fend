@@ -44,12 +44,19 @@ end
 function poll_methods:remove_lock ( )
 end
 
+local function default_onerror ( self , file , cbs , err , eventtype )
+	self:del_fd ( file )
+	pcall ( file.close , file )
+	return false
+end
+
 function poll_methods:dispatch ( max_events , timeout , onerror )
 	if timeout then
 		timeout = timeout * 1000
 	else
 		timeout = -1
 	end
+	onerror = onerror or default_onerror
 	local n = ffi.C.poll ( self.fds , self.nfds , timeout )
 	if n == -1 then
 		self.locked = false
@@ -76,20 +83,20 @@ function poll_methods:dispatch ( max_events , timeout , onerror )
 		if bit.band ( revents , defines.POLLIN ) ~= 0 then
 			if cbs.read then
 				local ok , err = pcall ( cbs.read , file , cbs , "write" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+				if not ok and onerror ( file , cbs , err , "write" ) == false then
 					error ( err )
 				end
 			end
 		end
 		if bit.band ( revents , defines.POLLERR ) ~= 0 then
 			local ok , err = pcall ( cbs.error , file , cbs , "write" )
-			if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+			if not ok and onerror ( file , cbs , err , "write" ) == false then
 				error ( err )
 			end
 		elseif bit.band ( revents , defines.POLLOUT ) ~= 0 then -- "This event and POLLOUT are mutually-exclusive; a stream can never be writable if a hangup has occurred."
 			if cbs.write then
 				local ok , err = pcall ( cbs.write , file , cbs , "write" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+				if not ok and onerror ( file , cbs , err , "write" ) == false then
 					error ( err )
 				end
 			end
@@ -97,7 +104,7 @@ function poll_methods:dispatch ( max_events , timeout , onerror )
 		if bit.band ( revents , defines.POLLHUP ) ~= 0 then
 			if cbs.close then
 				local ok , err = pcall ( cbs.close , file , cbs , "write" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+				if not ok and onerror ( file , cbs , err , "write" ) == false then
 					error ( err )
 				end
 			else
@@ -106,12 +113,12 @@ function poll_methods:dispatch ( max_events , timeout , onerror )
 		elseif bit.band ( revents , defines.POLLRDHUP ) ~= 0 then
 			if cbs.rdclose then
 				local ok , err = pcall ( cbs.rdclose , file , cbs , "write" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+				if not ok and onerror ( file , cbs , err , "write" ) == false then
 					error ( err )
 				end
 			elseif cbs.close then
 				local ok , err = pcall ( cbs.close , file , cbs , "write" )
-				if not ok and ( not onerror or onerror ( file , cbs , err , "write" ) == false ) then
+				if not ok and onerror ( file , cbs , err , "write" ) == false then
 					error ( err )
 				end
 			else

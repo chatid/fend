@@ -1,3 +1,6 @@
+local socket = require "fend.socket"
+local socket_methods = socket.socket_mt.__index
+
 local ffi = require "ffi"
 local ssl = ffi.load ( "ssl" )
 require "fend.common"
@@ -193,15 +196,15 @@ local function new_context ( params )
 end
 
 local original_socks = { } -- We have to keep the originals around to stop them getting closed on collection
-local ssl_methods = { }
-
-function ssl_methods:getfile ( )
-	return original_socks [ self ].file
-end
-
-function ssl_methods:getfd ( )
-	return original_socks [ self ].file:getfd ( )
-end
+local ssl_methods = setmetatable ( {
+		getfile = function ( self )
+			return original_socks [ self ]:getfile ( )
+		end
+	} , {
+		__index = function ( ssl_methods , method )
+			return socket_methods [ method ]
+		end ;
+	} )
 
 local function handle_err ( err , c )
 	if err == defines.SSL_ERROR_WANT_READ then

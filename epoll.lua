@@ -82,7 +82,13 @@ end
 function epoll_methods:del_fd ( file )
 	local fd = file:getfd()
 	if ffi.C.epoll_ctl ( self.epfile:getfd() , defines.EPOLL_CTL_DEL , fd , nil ) ~= 0 then
-		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		local err = ffi.errno ( )
+		if err == defines.ENOENT then
+			-- Ignore unregistered files
+		else
+			error ( ffi.string ( ffi.C.strerror ( err ) ) )
+		end
+		return
 	end
 	self.registered [ file ] = nil
 	self.raw_fd_map [ fd ] = nil

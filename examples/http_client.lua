@@ -167,24 +167,26 @@ local function request ( url , options , e , cb )
 
 		local len = 2^20
 		local buff = ffi.new("char[?]",len)
-		e:add_fd ( sock:getfile() , {
-				write = function ( file , cbs )
+		e:add_fd ( sock , {
+				write = function ( sock , cbs )
 					local sent , err = sock:send ( req )
 					if sent == nil then
 						if err == "wantread" then
 							-- Wait till readable
 							local old_read , old_write = cbs.read , cbs.write
-							cbs.read , cbs.write = function ( file , cbs )
+							cbs.read , cbs.write = function ( sock , cbs )
 								cbs.write = old_write
 								cbs.read = old_read
-								e:add_fd ( file , cbs )
+								e:add_fd ( sock , cbs )
 							end , nil
-							e:add_fd ( file , cbs )
+							e:add_fd ( sock , cbs )
 							return
 						elseif err == "wantwrite" then
 							return
 						else
 							onclose ( err )
+							e:del_fd ( sock , cbs )
+							sock:close ( )
 							return
 						end
 					elseif sent < #req then
@@ -192,10 +194,10 @@ local function request ( url , options , e , cb )
 					else --Successful
 						-- Remove write handler; we're done
 						cbs.write = nil
-						e:add_fd ( file , cbs )
+						e:add_fd ( sock , cbs )
 					end
 				end ;
-				read = function ( file , cbs )
+				read = function ( sock , cbs )
 					local c , err = sock:recv ( buff , len )
 					if c == nil then
 						if err == "wantread" then
@@ -203,35 +205,35 @@ local function request ( url , options , e , cb )
 						elseif err == "wantwrite" then
 							-- Wait till writable
 							local old_read , old_write = cbs.read , cbs.write
-							cbs.read , cbs.write = nil , function ( file , cbs )
+							cbs.read , cbs.write = nil , function ( sock , cbs )
 								cbs.write = old_write
 								cbs.read = old_read
-								e:add_fd ( file , cbs )
+								e:add_fd ( sock , cbs )
 							end
-							e:add_fd ( file , cbs )
+							e:add_fd ( sock , cbs )
 							return
 						else
 							onclose ( err )
-							e:del_fd ( file , cbs )
+							e:del_fd ( sock , cbs )
 							sock:close ( )
 							return
 						end
 					end
 					if onincoming ( sock , buff , c ) then
-						e:del_fd ( file , cbs )
+						e:del_fd ( sock , cbs )
 						sock:close ( )
 						return
 					end
 					if c ~= 0 then
-						return cbs.read ( file , cbs )
+						return cbs.read ( sock , cbs )
 					end
 				end ;
-				close = function ( file , cbs )
+				close = function ( sock , cbs )
 					onclose ( "HUP" )
-					e:del_fd ( file , cbs )
+					e:del_fd ( sock , cbs )
 					sock:close ( )
 				end ;
-				error = function ( file , cbs )
+				error = function ( sock , cbs )
 					error ( "error in http client" )
 				end ;
 				edge = true ;
@@ -256,7 +258,7 @@ local function request ( url , options , e , cb )
 				end
 				if url.scheme == "https" then
 					local timer = e:add_timer ( 5 , 0 , function ( timer , n )
-							e:del_fd ( sock:getfile() )
+							e:del_fd ( sock )
 							onconnect ( nil , "handshake timeout" )
 						end )
 					handshake ( ssl.wrap ( sock , { mode = "client", protocol = "sslv23" } ) , e , function ( ... )

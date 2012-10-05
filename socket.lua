@@ -95,10 +95,10 @@ end
 function sock_methods:accept ( with_sockaddr )
 	local sockaddr , sockaddr_len
 	if with_sockaddr then
-	 	sockaddr , sockaddr_len = ffi.new ( "struct sockaddr[1]" ) , ffi.new ( "socklen_t[1]" )
+	 	sockaddr , sockaddr_len = ffi.new ( "struct sockaddr" ) , ffi.new ( "socklen_t[1]" )
 		sockaddr_len[0] = ffi.sizeof ( sockaddr )
 	end
-	local clientfd = ffi.C.accept ( self:getfd() , sockaddr , sockaddr_len )
+	local clientfd = ffi.C.accept ( self:getfd() , ffi.new ( "struct sockaddr*" , sockaddr ) , sockaddr_len )
 	if clientfd == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end

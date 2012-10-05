@@ -24,17 +24,14 @@ local e = dispatcher()
 
 local stdin = new_file ( io.stdin )
 e:add_fd ( stdin , {
-	read = function ( file )
+	read = function ( stdin )
 		local len = 80
 		local buff = ffi.new("char[?]",len)
-		local c = tonumber ( ffi.C.read ( file:getfd() , buff , len ) )
-		if c == -1 then
-			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-		end
+		local c = stdin:read ( buff , len )
 		local str = ffi.string(buff,c)
 		if str:match("^quit%s") then dontquit = false end
 	end ;
-	error = function ( file , cbs )
+	error = function ( stdin , cbs )
 		error ( "stdin failure" )
 	end ;
 } )

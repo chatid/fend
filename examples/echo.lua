@@ -12,8 +12,8 @@ return function ( e , addrinfo , len )
 	serv:bind ( addrinfo )
 	serv:listen ( )
 
-	e:add_fd ( serv:getfile() , {
-			read = function ( file )
+	e:add_fd ( serv , {
+			read = function ( serv )
 				local client , sockaddr , sockaddr_len = serv:accept ( true )
 				print("ECHO CLIENT CONNECTED",dns.sockaddr_to_string ( sockaddr , sockaddr_len ))
 				local buff = ffi.new("char[?]",len)
@@ -22,14 +22,14 @@ return function ( e , addrinfo , len )
 				local sent = 0
 
 				local read , write , close
-				function read ( file , cbs )
+				function read ( client , cbs )
 					local max = len-(append-sent)
 					if max == 0 then return end -- Buffer full
 
 					local c , err = client:recv ( buff+(append%len) , max )
 					if c == nil then
 						if err == "EOF" then
-							cbs.close ( file , cbs )
+							cbs.close ( client , cbs )
 						end
 						return
 					end
@@ -41,9 +41,9 @@ return function ( e , addrinfo , len )
 					if c == max then
 						cbs.read = nil
 					end
-					e:add_fd ( file , cbs )
+					e:add_fd ( client , cbs )
 				end
-				function write ( file , cbs )
+				function write ( client , cbs )
 					local max = append-sent
 					if max == 0 then return end -- Buffer empty
 
@@ -54,22 +54,22 @@ return function ( e , addrinfo , len )
 					if c == max then
 						cbs.write = nil
 					end
-					e:add_fd ( file , cbs )
+					e:add_fd ( client , cbs )
 				end
-				function close ( file , cbs )
-					e:del_fd ( file , cbs )
+				function close ( client , cbs )
+					e:del_fd ( client , cbs )
 					client:close ( )
 				end
 
-				e:add_fd ( client:getfile() , {
+				e:add_fd ( client , {
 						read  = read ;
 						close = close ;
-						error = function ( file , cbs )
+						error = function ( client , cbs )
 							error ( "error in echo connection" )
 						end
 					} )
 			end ;
-			error = function ( file , cbs )
+			error = function ( serv , cbs )
 				error ( "echo server failure" )
 			end ;
 		} )

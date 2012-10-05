@@ -11,7 +11,7 @@ local function handle_resume ( self , ok , ... )
 		error ( err )
 	elseif (...) then
 		local sock , want = ...
-		self.dispatcher:add_fd ( sock:getfile() , {
+		self.dispatcher:add_fd ( sock , {
 				oneshot = true ;
 				edge = true ;
 				close = self.cb_handler ;
@@ -80,7 +80,7 @@ local function wrap ( dispatcher , func )
 	self = setmetatable ( {
 			co = co_create ( func ) ;
 			dispatcher = dispatcher ;
-			cb_handler = function ( file , cbs , evtype )
+			cb_handler = function ( sock , cbs , evtype )
 				return self ( evtype )
 			end ;
 		} , mt )

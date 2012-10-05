@@ -113,11 +113,11 @@ sock:connect ( addrinfo , e , function ( sock , err )
 		sock:write(str,#str,e,function(sock,err)
 				assert ( sock , err )
 
-				e:add_fd ( sock:getfile() , {
-					read = function ( file , cbs )
+				e:add_fd ( sock , {
+					read = function ( sock , cbs )
 						local c , err , p , pl = require "fend.examples.read".read_line ( sock )
 						if not c then
-							e:del_fd ( file )
+							e:del_fd ( sock )
 							print(c,err,p,pl)
 							error ( "Partial result" )
 							return
@@ -128,7 +128,7 @@ sock:connect ( addrinfo , e , function ( sock , err )
 						print("Confirmed Echo (read_line)")
 						sock:close()
 					end ;
-					error = function ( file , cbs )
+					error = function ( sock , cbs )
 						error ( "readline client failure" )
 					end ;
 				} )

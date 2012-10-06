@@ -2,17 +2,6 @@ include "xlocale"
 include "sys/types"
 
 ffi.cdef [[
-typedef __clock_t clock_t;
-
-
-
-typedef __time_t time_t;
-
-
-typedef __clockid_t clockid_t;
-typedef __timer_t timer_t;
-
-
 struct tm
 {
   int tm_sec;

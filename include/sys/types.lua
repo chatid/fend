@@ -43,7 +43,10 @@ typedef unsigned long int __fsblkcnt_t;
 typedef unsigned long int __fsblkcnt64_t;
 typedef unsigned long int __fsfilcnt_t;
 typedef unsigned long int __fsfilcnt64_t;
+typedef long int __fsword_t;
 typedef long int __ssize_t;
+typedef long int __syscall_slong_t;
+typedef unsigned long int __syscall_ulong_t;
 typedef __off64_t __loff_t;
 typedef __quad_t *__qaddr_t;
 typedef char *__caddr_t;
@@ -102,7 +105,7 @@ typedef __sigset_t sigset_t;
 struct timespec
   {
     __time_t tv_sec;
-    long int tv_nsec;
+    __syscall_slong_t tv_nsec;
   };
 struct timeval
   {
@@ -127,11 +130,12 @@ typedef __blkcnt_t blkcnt_t;
 typedef __fsblkcnt_t fsblkcnt_t;
 typedef __fsfilcnt_t fsfilcnt_t;
 typedef unsigned long int pthread_t;
-typedef union
+union pthread_attr_t
 {
   char __size[56];
   long int __align;
-} pthread_attr_t;
+};
+typedef union pthread_attr_t pthread_attr_t;
 typedef struct __pthread_internal_list
 {
   struct __pthread_internal_list *__prev;

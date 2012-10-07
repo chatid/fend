@@ -28,7 +28,7 @@ end
 local methods = { }
 local mt = {
 	__call = function ( self , ... )
-		return handle_resume ( self , co_resume ( self.co , ... ) )
+		return handle_resume ( self , co_resume ( self.co , self , ... ) )
 	end ;
 	__index = methods ;
 }
@@ -46,7 +46,7 @@ function methods:send ( sock , buff , len )
 		end
 		sent = sent + n
 		if sent >= len then break end
-		local ev = co_yield ( sock , "write" )
+		local sock , ev = co_yield ( sock , "write" )
 		if ev ~= "write" then
 			return nil , ev , sent
 		end
@@ -63,7 +63,7 @@ function methods:recv ( sock , buff , len )
 		end
 		got = got + n
 		if got >= len then break end
-		local ev = co_yield ( sock , "read" )
+		local sock , ev = co_yield ( sock , "read" )
 		if ev ~= "read" then
 			return nil , ev , got
 		end

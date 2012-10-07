@@ -1,6 +1,7 @@
 local ffi = require "ffi"
 local bit = require "bit"
 require "fend.common"
+include "stdio"
 include "fcntl"
 include "unistd"
 

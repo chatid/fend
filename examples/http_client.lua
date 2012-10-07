@@ -25,14 +25,86 @@ local hints = ffi.new ( "const struct addrinfo[1]" , { {
 	ai_protocol = 0 ;
 } } )
 
+local function prep_request ( url , options )
+	url = urlparse ( url )
+	options = options or { }
+
+	local headers = {
+		Host = url.host ;
+		["User-Agent"] = "fend" ;
+	}
+	-- Copy headers from requester
+	if options.headers then
+		for name , value in pairs ( options.headers ) do
+			headers [ name ] = value
+		end
+	end
+	local path = url.path or "/"
+	if url.query then
+		path = path .. "?" .. url.query
+	end
+	local req , n = {
+		strformat ( "%s %s HTTP/%d.%d\r\n" , options.method or "GET" , path , 1 , 1 ) ;
+	} , 2
+	for name , value in pairs ( headers ) do
+		req [ n ] = name
+		req [ n+1 ] = ": "
+		req [ n+2 ] = value
+		req [ n+3 ] = "\r\n"
+		n = n + 4
+	end
+	req [ n ] = "\r\n"
+	return url , tconcat ( req )
+end
+
+local function connect ( url , e , onconnect )
+	local orig_addrinfo -- Gotta keep it around so it doesn't get collected
+	local function addrinfo_callback ( addrinfo , err )
+		if not addrinfo then onconnect ( nil , err ) return end
+		if not orig_addrinfo then orig_addrinfo = addrinfo end
+
+		local sock = socket.new_tcp ( addrinfo.ai_family )
+		sock:connect ( addrinfo , e , function ( sock , err )
+				if not sock then
+					if addrinfo.ai_next ~= ffi.NULL then
+						addrinfo_callback ( addrinfo.ai_next )
+					else
+						onconnect ( nil , "Unable to connect to server" )
+					end
+					return
+				end
+				if url.scheme == "https" then
+					local timer = e:add_timer ( 5 , 0 , function ( timer , n )
+							e:del_fd ( sock )
+							onconnect ( nil , "handshake timeout" )
+						end )
+					handshake ( ssl.wrap ( sock , { mode = "client", protocol = "sslv23" } ) , e , function ( ... )
+							timer:disarm ( )
+							onconnect ( ... )
+						end )
+				else
+					onconnect ( sock )
+				end
+			end )
+	end
+	return dns.lookup_async ( url.host , url.port or url.scheme or "http" , hints , e , addrinfo_callback )
+end
+
 local function request ( url , options , e , cb )
+	local req
+	if type(options) == "string" then
+		req = options
+	else
+		url , req = prep_request ( url , options )
+	end
+
 	local ret = { headers = { } , body = { } }
 	local state = "new"
 	local saved = ""
 	local lastheader = nil
 	local bodylen = 0
 	local function onclose ( err )
-		ret.body = tconcat(ret.body)
+		ret.body = tconcat ( ret.body )
 		if state == "done" then
 			cb ( ret )
 		else
@@ -135,35 +207,8 @@ local function request ( url , options , e , cb )
 		return false
 	end
 
-	local function onconnect ( sock , err)
+	local function onconnect ( sock , err )
 		if not sock then onclose ( "Connection failed: " .. err ) return end
-
-		local headers = {
-			Host = url.host ;
-			["User-Agent"] = "fend" ;
-		}
-		-- Copy headers from requester
-		if options.headers then
-			for name , value in pairs ( options.headers ) do
-				headers [ name ] = value
-			end
-		end
-		local path = url.path or "/"
-		if url.query then
-			path = path .. "?" .. url.query
-		end
-		local req , n = {
-			strformat ( "%s %s HTTP/%d.%d\r\n" , options.method or "GET" , path , 1 , 1 ) ;
-		} , 2
-		for name , value in pairs ( headers ) do
-			req [ n ] = name
-			req [ n+1 ] = ": "
-			req [ n+2 ] = value
-			req [ n+3 ] = "\r\n"
-			n = n + 4
-		end
-		req [ n ] = "\r\n"
-		req = tconcat ( req )
 
 		local len = 2^20
 		local buff = ffi.new("char[?]",len)
@@ -240,39 +285,10 @@ local function request ( url , options , e , cb )
 			} )
 	end
 
-	url = urlparse ( url )
-	local orig_addrinfo -- Gotta keep it around so it doesn't get collected
-	local function addrinfo_callback ( addrinfo , err )
-		if not addrinfo then onconnect ( err ) return end
-		if not orig_addrinfo then orig_addrinfo = addrinfo end
-
-		local sock = socket.new_tcp ( addrinfo.ai_family )
-		sock:connect ( addrinfo , e , function ( sock , err )
-				if not sock then
-					if addrinfo.ai_next ~= ffi.NULL then
-						addrinfo_callback ( addrinfo.ai_next )
-					else
-						onconnect ( nil , "Unable to connect to server" )
-					end
-					return
-				end
-				if url.scheme == "https" then
-					local timer = e:add_timer ( 5 , 0 , function ( timer , n )
-							e:del_fd ( sock )
-							onconnect ( nil , "handshake timeout" )
-						end )
-					handshake ( ssl.wrap ( sock , { mode = "client", protocol = "sslv23" } ) , e , function ( ... )
-							timer:disarm ( )
-							onconnect ( ... )
-						end )
-				else
-					onconnect ( sock )
-				end
-			end )
-	end
-	dns.lookup_async ( url.host , url.port or url.scheme or "http" , hints , e , addrinfo_callback )
+	return connect ( url , e , onconnect )
 end
 
 return {
+	prep_request = prep_request ;
 	request = request ;
 }

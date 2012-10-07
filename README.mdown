@@ -21,16 +21,15 @@ Modules
 ### File
 This module wraps raw file descriptors (usually ints) in a structure to attach methods.
 
-The module returns a constructor that takes the raw file descriptor:
-``` lua
-    new_file = require "fend.file"
-    stdin = new_fd ( 0 )
-```
+  - `my_file = file.wrap ( fd , no_close )`  
+  	Wraps the fd in a fend 'file' structure.  
+  	`fd` may be a numeric file descritor or a lua file object.  
+  	`no_close` will skip closing the file on object collection  
 
- - `file:getfd ( )`  
+ - `my_file:getfd ( )`  
  	returns the raw file descriptor
 
- - `file:set_blocking ( bool )`  
+ - `my_file:set_blocking ( bool )`  
  	sets the `O_NONBLOCK` flag
 
 

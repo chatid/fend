@@ -4,7 +4,7 @@ local floor = math.floor
 
 local ffi = require "ffi"
 local bit = require "bit"
-local new_file = require "fend.file"
+local new_file = require "fend.file".wrap
 require "fend.common"
 include "stdio"
 include "string"

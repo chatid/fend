@@ -1,6 +1,6 @@
 local bit = require "bit"
 local ffi = require "ffi"
-local new_file = require "fend.file"
+local new_file = require "fend.file".wrap
 require "fend.common"
 include "string"
 include "sys/inotify"

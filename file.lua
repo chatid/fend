@@ -83,7 +83,7 @@ ffi.metatype ( "file_t" , {
 		end ;
 	} )
 
-return function ( fd , no_close )
+local function wrap ( fd , no_close )
 	local is_luafile = io.type ( fd )
 	if is_luafile then
 		fd = ffi.C.fileno ( fd )
@@ -93,3 +93,7 @@ return function ( fd , no_close )
 	end
 	return new ( { fd = fd , no_close = no_close or (is_luafile == "closed file") } ) -- COMPAT: Wrap in table for luaffi
 end
+
+return {
+	wrap = wrap ;
+}

@@ -13,7 +13,7 @@ include "stdio"
 include "unistd"
 include "string" -- For strerror
 include "signal"
-local new_file = require "fend.file"
+local new_file = require "fend.file".wrap
 local dns = require "fend.dns"
 local socket = require "fend.socket"
 require "fend.socket_helpers"

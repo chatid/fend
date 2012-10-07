@@ -4,7 +4,7 @@
 
 local ffi = require "ffi"
 local bit = require "bit"
-local new_file = require "fend.file"
+local new_file = require "fend.file".wrap
 local signalfd = require "fend.signalfd"
 local timerfd  = require "fend.timerfd"
 local inotify  = require "fend.inotify"

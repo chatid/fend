@@ -9,6 +9,11 @@ include "sys/un"
 include "netinet/in"
 include "arpa/inet"
 
+local t_sockaddr = ffi.typeof ( "struct sockaddr" )
+local s_sockaddr = ffi.sizeof ( t_sockaddr )
+local t_sockaddr_len_p = ffi.typeof ( "socklen_t[1]" )
+
+
 local sock_methods = { }
 local sock_mt = {
 	__index = sock_methods ;
@@ -36,13 +41,16 @@ function sock_methods:close ( )
 	return self:getfile ( ):close ( )
 end
 
-local function getsockerr ( file  )
-	local err , err_len = ffi.new ( "int[1]" ) , ffi.new ( "socklen_t[1]" )
-	err_len[0] = ffi.sizeof ( err )
-	if ffi.C.getsockopt ( file:getfd() , defines.SOL_SOCKET , defines.SO_ERROR , err , err_len ) ~= 0 then
-		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+local getsockerr
+do
+	local err = ffi.new ( "int[1]" )
+	local err_len = t_sockaddr_len_p ( { ffi.sizeof ( err ) } )
+	function getsockerr ( file  )
+		if ffi.C.getsockopt ( file:getfd() , defines.SOL_SOCKET , defines.SO_ERROR , err , err_len ) ~= 0 then
+			error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		end
+		return err[0]
 	end
-	return err[0]
 end
 
 function sock_methods:get_error ( )
@@ -57,7 +65,7 @@ end
 function sock_methods:set_option ( level , option , val , size )
 	if type ( val ) == "boolean" or type ( val ) == "number" then
 		val  = ffi.new ( "int[1]" ,val )
-		size = ffi.sizeof ( val )
+		size = 4
 	else
 		assert ( val ~= nil , "Invalid value" )
 		size = size or ffi.sizeof ( val )
@@ -95,10 +103,10 @@ end
 function sock_methods:accept ( with_sockaddr )
 	local sockaddr , sockaddr_len
 	if with_sockaddr then
-	 	sockaddr , sockaddr_len = ffi.new ( "struct sockaddr" ) , ffi.new ( "socklen_t[1]" )
-		sockaddr_len[0] = ffi.sizeof ( sockaddr )
+	 	sockaddr     = t_sockaddr ( )
+	 	sockaddr_len = t_sockaddr_len_p { s_sockaddr }
 	end
-	local clientfd = ffi.C.accept ( self:getfd() , ffi.new ( "struct sockaddr*" , sockaddr ) , sockaddr_len )
+	local clientfd = ffi.C.accept ( self:getfd() , sockaddr , sockaddr_len )
 	if clientfd == -1 then
 		local err = ffi.errno ( )
 		if err == defines.EAGAIN or err == defines.EWOULDBLOCK then
@@ -143,9 +151,13 @@ sock_methods.receive = sock_methods.recv
 
 function sock_methods:recvfrom ( buff , len , flags , address , address_len )
 	flags = flags or 0
-	address     = address or ffi.new ( "struct sockaddr" )
-	address_len = address_len or ffi.sizeof ( address )
-    local address_len_box = ffi.new ( "socklen_t[1]" , address_len )
+	local address_len_box
+	if address then
+		address_len_box = ffi.sizeof ( address )
+	else
+		address = t_sockaddr ( )
+		address_len_box = t_sockaddr_len_p { s_sockaddr }
+	end
 	local c = tonumber ( ffi.C.recvfrom ( self:getfd() , buff , len , flags ,
 			ffi.new ( "struct sockaddr*" , address ) , address_len_box ) )
 	if c == 0 then
@@ -197,8 +209,8 @@ function sock_methods:sendto ( buff , len , flags , dest_addr , dest_addr_len )
 end
 
 function sock_methods:getpeername ( )
-	local sockaddr , sockaddr_len = ffi.new ( "struct sockaddr[1]" ) , ffi.new ( "socklen_t[1]" )
-	sockaddr_len[0] = ffi.sizeof ( sockaddr )
+	local sockaddr     = t_sockaddr ( )
+	local sockaddr_len = t_sockaddr_len_p { s_sockaddr }
 	if ffi.C.getpeername ( sock:getfd() , sockaddr , sockaddr_len ) == -1 then
 		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
 	end

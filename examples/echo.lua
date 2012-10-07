@@ -15,6 +15,7 @@ return function ( e , addrinfo , len )
 	e:add_fd ( serv , {
 			read = function ( serv )
 				local client , sockaddr , sockaddr_len = serv:accept ( true )
+				if not client then return end
 				print("ECHO CLIENT CONNECTED",dns.sockaddr_to_string ( sockaddr , sockaddr_len ))
 				local buff = ffi.new("char[?]",len)
 

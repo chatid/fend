@@ -67,6 +67,7 @@ A non-blocking luasocket-like interface
 
  - `sock:accept ( with_sockaddr )`  
  	Accepts a new client on `sock`.  
+ 	Can return `nil` if no client is available.  
  	The returned socket will have `O_NONBLOCK` set.  
  	If `with_sockaddr` is true, the call will return a `sockaddr` and length as extra return values
 

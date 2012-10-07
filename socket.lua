@@ -100,7 +100,12 @@ function sock_methods:accept ( with_sockaddr )
 	end
 	local clientfd = ffi.C.accept ( self:getfd() , ffi.new ( "struct sockaddr*" , sockaddr ) , sockaddr_len )
 	if clientfd == -1 then
-		error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+		local err = ffi.errno ( )
+		if err == defines.EAGAIN or err == defines.EWOULDBLOCK then
+			return nil
+		else
+			error ( ffi.string ( ffi.C.strerror ( err ) ) )
+		end
 	end
 	local client = new_sock ( new_file ( clientfd ) , self.type )
 	client.connected = true

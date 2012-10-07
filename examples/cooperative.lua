@@ -72,6 +72,19 @@ function methods:recv ( sock , buff , len )
 end
 methods.receive = methods.recv
 
+function methods:accept ( sock , ... )
+	while true do
+		local client , sockaddr , sockaddr_len = sock:accept ( ... )
+		if client then
+			return client , sockaddr , sockaddr_len
+		end
+		local sock , ev = co_yield ( sock , "read" )
+		if ev ~= "read" then
+			return nil , ev
+		end
+	end
+end
+
 -- The function retuns an object with methods `recv` and `send`
 -- These methods yield until they have completed; if an error occurs they return nil , err
 -- Calling the returned value will raise an error inside of send/recv

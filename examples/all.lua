@@ -90,7 +90,7 @@ do -- Example of writing in coroutine style (connects to echo server)
 			go ( "timeout" )
 			return false
 		end )
-	go = co.wrap ( e , function ( c , err )
+	go = co.wrap ( e , function ( go , c , err )
 			if not c then error ( err ) end
 			assert ( go:send ( c , str ) )
 			local len = #str

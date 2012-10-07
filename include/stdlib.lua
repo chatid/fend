@@ -2,7 +2,6 @@ include "xlocale"
 include "sys/types"
 
 ffi.cdef [[
-typedef long unsigned int size_t;
 typedef int wchar_t;
 
 union wait

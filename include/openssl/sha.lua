@@ -1,9 +1,7 @@
+include "sys/types"
 include "openssl/e_os2"
 
 ffi.cdef [[
-typedef long int ptrdiff_t;
-typedef long unsigned int size_t;
-typedef int wchar_t;
 typedef struct SHAstate_st
  {
  unsigned int h0,h1,h2,h3,h4;

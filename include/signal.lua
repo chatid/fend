@@ -271,7 +271,6 @@ struct sigcontext
   unsigned long __reserved1 [8];
 };
 extern int sigreturn (struct sigcontext *__scp) __attribute__ ((__nothrow__ , __leaf__));
-typedef long unsigned int size_t;
 extern int siginterrupt (int __sig, int __interrupt) __attribute__ ((__nothrow__ , __leaf__));
 struct sigstack
   {

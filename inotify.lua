@@ -42,7 +42,7 @@ local i_cb_table = {
 
 				local name -- name field is only present when an event is returned for a file inside a watched directory
 				if event.len > 0 then
-					name = ffi.string ( event.name , event.len-1 )
+					name = ffi.string ( event.name )
 				end
 				local cbs = watcher.cbs
 

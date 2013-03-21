@@ -14,6 +14,15 @@ ffi.cdef [[
 
 local new = ffi.typeof ( "file_t" )
 local file_methods = { }
+local file_mt = {
+	__index = file_methods ;
+	__tostring = function ( self )
+		return "file(" .. tostring(self:getfd()) .. ")"
+	end ;
+	__gc = function ( self )
+		self:close ( )
+	end ;
+}
 
 function file_methods:close ( )
 	if not self.no_close then
@@ -74,15 +83,7 @@ function file_methods:set_blocking ( bool )
 	end
 end
 
-ffi.metatype ( "file_t" , {
-		__index = file_methods ;
-		__tostring = function ( self )
-			return "file(" .. tostring(self:getfd()) .. ")"
-		end ;
-		__gc = function ( self )
-			self:close ( )
-		end ;
-	} )
+ffi.metatype ( "file_t" , file_mt )
 
 local function wrap ( fd , no_close )
 	local is_luafile = io.type ( fd )
@@ -97,4 +98,5 @@ end
 
 return {
 	wrap = wrap ;
+	file_mt = file_mt ;
 }

@@ -23,6 +23,30 @@ else
 end
 _M.path = fend_path
 
+if not package.searchpath then
+	local function exists ( path )
+		local fd , err = io.open ( path )
+		if fd then
+			fd:close ( )
+			return path
+		end
+		return false , err
+	end
+	function package.searchpath ( name , paths )
+		name = name:gsub ( "%." , "/" )
+		local searched = { "" }
+		for path in paths:gmatch ( "[^;]+" ) do
+			path = path:gsub ( "?" , name )
+			if exists ( path ) then
+				return path
+			else
+				table.insert ( searched , "no file '" .. path .. "'" )
+			end
+		end
+		return nil , table.concat ( searched , "\n\t" )
+	end
+end
+
 function _M.add_current_module ( level )
 	level = (level or 2)+1
 	_M.path = _M.path .. ";" .. assert ( current_module_path ( level ) , "Not a file" )

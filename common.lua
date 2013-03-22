@@ -1,3 +1,5 @@
+local ffi = require "ffi"
+
 local _M = { }
 
 local function current_module_path ( level )
@@ -53,7 +55,7 @@ end
 
 includeENV = setmetatable ( { } , {
 		__index = {
-			ffi      = require "ffi" ;
+			ffi      = ffi ;
 			bit      = require "bit" ;
 			tonumber = tonumber ; -- Some libraries have octals to convert
 			include  = include ;
@@ -70,5 +72,16 @@ _M.include = include
 _M.defines = includeENV
 _G.include = include
 _G.defines = includeENV
+
+-- Select a signal to use, and block it
+include "signal"
+local signum = ffi.C.__libc_current_sigrtmin()
+local mask = ffi.new ( "sigset_t[1]" )
+ffi.C.sigemptyset ( mask )
+ffi.C.sigaddset ( mask , signum )
+if ffi.C.sigprocmask ( defines.SIG_BLOCK , mask , nil ) ~= 0 then
+	error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
+end
+_M.signum = signum
 
 return _M

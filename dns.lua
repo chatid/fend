@@ -2,7 +2,7 @@ local ffi = require "ffi"
 local bit = require "bit"
 
 local anl = ffi.load ( "anl" )
-require "fend.common"
+local common = require "fend.common"
 include "netdb"
 include "signal"
 include "string"
@@ -60,15 +60,6 @@ local function lookup ( hostname , port , hints )
 	return ffi.gc ( res[0] , ffi.C.freeaddrinfo )
 end
 
--- Select a signal to use, and block it
-local signum = ffi.C.__libc_current_sigrtmin()
-local mask = ffi.new ( "sigset_t[1]" )
-ffi.C.sigemptyset ( mask )
-ffi.C.sigaddset ( mask , signum )
-if ffi.C.sigprocmask ( defines.SIG_BLOCK , mask , nil ) ~= 0 then
-	error ( ffi.string ( ffi.C.strerror ( ffi.errno ( ) ) ) )
-end
-
 --- Lookup the given hostname and port
 -- Adds a watch for completion to `epoll_ob`, and when done calls
 -- `cb` is called when done, gets argument of an `addrinfo`, or `nil , err` on failure
@@ -85,10 +76,10 @@ local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 
 	local sigevent = ffi.new ( "struct sigevent" )
 	sigevent.sigev_notify = ffi.C.SIGEV_SIGNAL
-	sigevent.sigev_signo = signum
+	sigevent.sigev_signo = common.signum
 	sigevent.sigev_value.sival_ptr = list
 
-	local cb_id = epoll_ob:add_signal ( signum , function ( sig_info , cb_id )
+	local cb_id = epoll_ob:add_signal ( common.signum , function ( sig_info , cb_id )
 			if sig_info[0].ssi_code == ffi.C.SI_ASYNCNL then
 				local retlist = ffi.cast ( "struct gaicb*" , sig_info[0].ssi_ptr )
 				if retlist == list then
@@ -98,7 +89,7 @@ local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 					else
 						cb ( nil , ffi.string ( anl.gai_strerror ( err ) ) )
 					end
-					epoll_ob:del_signal ( signum , cb_id )
+					epoll_ob:del_signal ( common.signum , cb_id )
 				end
 			end
 		end )
@@ -124,7 +115,7 @@ local function lookup_async ( hostname , port , hints , epoll_ob , cb )
 				else
 					cb ( nil , ffi.string ( anl.gai_strerror ( err ) ) )
 				end
-				epoll_ob:del_signal ( signum , cb_id )
+				epoll_ob:del_signal ( common.signum , cb_id )
 				return true
 			elseif err == defines.EAI_AGAIN or err == defines.EAI_INTR then
 				return false
